@@ -102,8 +102,10 @@ const key = `${name}::${sha256(hashInput(cfg))}`
 ## 测试
 
 ```bash
-npm test        # 40 项：核心模块 + 工具契约 + HTTP 端到端 + 会话生命周期
+npm test        # 单元：核心模块 + 工具契约 + HTTP 端到端 + 会话生命周期 + CLI 契约
 ```
+
+`test/cli-contract.test.mjs` 守两件事：三个远端脚本**缺 `DIAGRAM_MCP_URL` 必须 exit 2 并点名该变量**（不能把"忘配地址"伪装成网络错误），以及**仓库里不许出现内网地址**。它靠 `spawnSync` 拉起子进程——在禁 spawn 的沙箱里会显式 skip 并说明原因，不会假通过。
 
 对**已部署实例**跑端到端冒烟（真实 MCP 客户端、握手、鉴权、7 工具全打一遍、并发会话）：
 
@@ -113,6 +115,7 @@ DIAGRAM_MCP_TOKEN=<token> \
 node scripts/smoke-remote.mjs
 ```
 
+> **两个变量都是必须的，没有默认值。** 这三个脚本打的是*部署实例*，一个指向 `localhost` 的假默认值只会把"你忘了配地址"变成一句看不懂的 `ECONNREFUSED`。
 > 若本机设了 `HTTP_PROXY`，局域网地址会被代理拦掉（404）。用
 > `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy` 跑。
 
@@ -133,7 +136,9 @@ node scripts/audit.mjs
 重建 `examples/` 里的示例图与图库页（同样打的是真实服务，任何一张有 error 就以非零码退出）：
 
 ```bash
-DIAGRAM_MCP_TOKEN=<token> npm run examples
+DIAGRAM_MCP_URL=http://<host>:8400/mcp \
+DIAGRAM_MCP_TOKEN=<token> \
+node scripts/build-examples.mjs
 ```
 
 ## 示例
@@ -175,7 +180,7 @@ src/
     scaffold.js     合规骨架生成器
     import.js       Mermaid / draw.io / Excalidraw 解析器
     catalog.json    45 类图表目录
-test/               40 项
+test/               43 项（含 CLI 契约，2 项在禁 spawn 的环境下 skip）
 scripts/            smoke-remote.mjs（60 项端到端）· audit.mjs（67 项边界审计）· build-examples.mjs
 examples/           两张真图 + 图库页
 deploy/             run.sh + Termux 守护脚本
