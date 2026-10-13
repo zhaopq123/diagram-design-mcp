@@ -14,9 +14,18 @@ import { readFile } from 'node:fs/promises'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 
-const BASE = (process.env.DIAGRAM_MCP_URL ?? 'http://localhost:8400/mcp').replace(/\/mcp$/, '')
+// No default: this script talks to a *deployed* instance, and a placeholder
+// default that silently points at localhost turns every run into an opaque
+// ECONNREFUSED (that is exactly how it broke once). Same contract as TOKEN.
+const RAW_URL = process.env.DIAGRAM_MCP_URL ?? ''
+const BASE = RAW_URL.replace(/\/mcp$/, '')
 const URL_ = `${BASE}/mcp`
 const TOKEN = process.env.DIAGRAM_MCP_TOKEN ?? ''
+if (RAW_URL.length === 0) {
+  console.error('DIAGRAM_MCP_URL 未设置——这是打远端部署实例的脚本，必须显式给地址，例如：')
+  console.error('  DIAGRAM_MCP_URL=http://<host>:8400/mcp')
+  process.exit(2)
+}
 if (TOKEN.length === 0) {
   console.error('DIAGRAM_MCP_TOKEN 未设置')
   process.exit(2)
@@ -264,4 +273,33 @@ async function main() {
   process.exit(fail === 0 ? 0 : 1)
 }
 
-main().catch((error) => { console.error('\n[致命] 审计脚本崩了：', error); process.exit(1) })
+main().catch((error) => {
+  // A raw "fetch failed / ECONNREFUSED" reads like a server bug and sends you
+  // digging through logs. In practice it is almost always one of three boring
+  // things, so name them instead of dumping the stack and hoping.
+  //
+  // NOTE on the haystack: `AggregateError.cause` from undici has an empty
+  // `message`, so `cause?.message ?? error?.message` yields "" and matches
+  // nothing. Collect every candidate string instead of picking one.
+  const cause = error?.cause
+  const haystack = [
+    error?.message,
+    cause?.message,
+    ...(Array.isArray(cause?.errors) ? cause.errors.map((e) => e?.message ?? e?.code) : [cause?.code]),
+  ].filter(Boolean).join(' | ')
+  const networkish = /fetch failed|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|EPIPE|Failed to parse URL|Invalid URL/i.test(haystack)
+
+  console.error('\n[致命] 审计没跑完：', error?.message ?? error)
+  if (networkish) {
+    console.error('\n连不上目标。按这个顺序查，别先翻日志：')
+    console.error(`  1. DIAGRAM_MCP_URL 现在指向 ${BASE || '(空)'} —— 地址对了吗？端口对吗？`)
+    console.error('  2. 服务活着吗：curl <host>:<port>/health 应该返回 {"ok":true,...}')
+    if (RAW_URL.length > 0 && !/^https?:\/\//i.test(RAW_URL)) {
+      console.error(`  3. URL 缺 http(s) 前缀：${JSON.stringify(RAW_URL)}`)
+    }
+    console.error('  4. 代理：本机若设了 HTTP_PROXY，局域网地址会被代理拦掉，')
+    console.error('     要加 env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy')
+    if (cause?.code) console.error(`  (底层错误码 ${cause.code})`)
+  }
+  process.exit(1)
+})

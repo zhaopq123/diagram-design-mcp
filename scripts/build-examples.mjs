@@ -8,15 +8,24 @@
  * own examples do not pass its own gate is teaching the wrong thing.
  *
  * Run:
- *   DIAGRAM_MCP_TOKEN=<token> node scripts/build-examples.mjs
+ *   DIAGRAM_MCP_URL=http://<host>:8400/mcp \
+ *   DIAGRAM_MCP_TOKEN=<token> \
+ *   node scripts/build-examples.mjs
  */
 import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
 import { basename } from 'node:path'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 
-const URL_ = process.env.DIAGRAM_MCP_URL ?? 'http://localhost:8400/mcp'
+// No default here. A missing DIAGRAM_MCP_URL must fail loudly — a baked-in
+// placeholder only converts "you forgot to configure this" into a network error.
+const URL_ = process.env.DIAGRAM_MCP_URL ?? ''
 const TOKEN = process.env.DIAGRAM_MCP_TOKEN ?? ''
+if (URL_.length === 0) {
+  console.error('DIAGRAM_MCP_URL 未设置——这个脚本打的是部署实例，必须显式给地址：')
+  console.error('  DIAGRAM_MCP_URL=http://<host>:8400/mcp')
+  process.exit(2)
+}
 if (TOKEN.length === 0) {
   console.error('DIAGRAM_MCP_TOKEN 未设置')
   process.exit(2)
