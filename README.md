@@ -126,6 +126,8 @@ DIAGRAM_MCP_EXPECT_IDLE_MS=1800000 \
 node scripts/audit.mjs
 ```
 
+审计自己不留尾巴：它会故意造 15 个孤儿会话来验证回收与上限，但**在断言成立后立刻清掉**，并在结束时要求会话数回到基线。跑完就干净，不用等空闲窗口过去。
+
 `DIAGRAM_MCP_EXPECT_*` 是可选的，但**部署后一定要带上**：不带的话只验"`/health` 有这个字段"，带了才验"值等于你配的"。少了这一层，配置漂移（变量名拼错、启动脚本漏导出）能一路绿灯放行。
 
 重建 `examples/` 里的示例图与图库页（同样打的是真实服务，任何一张有 error 就以非零码退出）：
@@ -174,7 +176,7 @@ src/
     import.js       Mermaid / draw.io / Excalidraw 解析器
     catalog.json    45 类图表目录
 test/               40 项
-scripts/            smoke-remote.mjs（60 项端到端）· audit.mjs（65 项边界审计）· build-examples.mjs
+scripts/            smoke-remote.mjs（60 项端到端）· audit.mjs（67 项边界审计）· build-examples.mjs
 examples/           两张真图 + 图库页
 deploy/             run.sh + Termux 守护脚本
 skill/              WorkBuddy Skill 入口
