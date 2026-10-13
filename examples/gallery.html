@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagram Design 示例图库</title>
+<style>
+  :root { color-scheme: light dark; --ink:#2c2c2a; --muted:#5f5e5a; --soft:#888780; --rule:#d3d1c7; --paper:#faf9f6; --card:#ffffff; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:32px; background:var(--paper); color:var(--ink); font:14px/1.6 'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif; }
+  h1 { font:400 28px/1.2 'Instrument Serif','Noto Serif SC',serif; margin:0 0 8px; }
+  .meta { color:var(--muted); margin:0 0 28px; }
+  .card { background:var(--card); border:1px solid var(--rule); border-radius:6px; padding:20px; margin:0 0 24px; }
+  .card header { margin:0 0 14px; }
+  .card h2 { font-size:15px; font-weight:600; margin:0 0 4px; }
+  .path { font-family:'Geist Mono',ui-monospace,monospace; font-size:12px; color:var(--soft); }
+  .verdict { font-size:12px; color:var(--muted); margin-top:6px; }
+  .ok { color:#0f6e56; font-weight:500; }
+  .bad { color:#a32d2d; font-weight:500; }
+  iframe { width:100%; height:420px; border:1px solid var(--rule); border-radius:4px; background:#fff; }
+  details { margin-top:12px; }
+  summary { cursor:pointer; font-size:12px; color:var(--muted); }
+  ul { margin:10px 0 0; padding-left:20px; font-size:12px; }
+  li { margin:4px 0; }
+  li.err { color:#a32d2d; }
+  li.warn { color:#854f0b; }
+  li.none { color:var(--soft); list-style:none; margin-left:-20px; }
+</style>
+</head>
+<body>
+<h1>Diagram Design 示例图库</h1>
+<p class="meta">2 张图 · 由 diagram_gallery 生成 · 预览在隔离沙箱中渲染</p>
+<section class="card">
+  <header>
+    <h2>request-path.html</h2>
+    <div class="path">examples/request-path.html</div>
+    <div class="verdict"><span class="ok">通过</span> — 0 error · 0 warn</div>
+  </header>
+  <iframe sandbox="" loading="lazy" title="request-path.html 预览" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;title&gt;WorkBuddy 图表 MCP：一次请求的链路&lt;/title&gt;
+  &lt;link href=&quot;https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+  &lt;style&gt;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper: #f5f5f5; --color-ink: #2d3142; --color-muted: #4f5d75; --color-accent: #bf4520;
+      --font-sans: 'Geist', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', 'Noto Serif', 'Noto Serif KR', 'Noto Serif TC', serif;
+      --font-mono: 'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400;
+      letter-spacing: -0.02em; line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print { .diagram-container { overflow-x: visible; } svg { min-width: 0; } }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;frame&quot;&gt;
+    &lt;p class=&quot;eyebrow&quot;&gt;architecture · Diagram Design&lt;/p&gt;
+    &lt;h1&gt;WorkBuddy 图表 MCP：一次请求的链路&lt;/h1&gt;
+
+    &lt;div class=&quot;diagram-container&quot;&gt;
+      &lt;svg viewBox=&quot;0 0 960 600&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; role=&quot;img&quot; aria-labelledby=&quot;workbuddy-图表-mcp-一次请求的链路-title workbuddy-图表-mcp-一次请求的链路-desc&quot;&gt;
+        &lt;title id=&quot;workbuddy-图表-mcp-一次请求的链路-title&quot;&gt;WorkBuddy 图表 MCP：一次请求的链路&lt;/title&gt;
+        &lt;desc id=&quot;workbuddy-图表-mcp-一次请求的链路-desc&quot;&gt;一次 diagram_check 调用从 WorkBuddy 会话经鉴权与分发抵达工具、并回写交付物的路径。&lt;/desc&gt;
+        &lt;defs&gt;
+    &lt;marker id=&quot;arrow&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;
+      &lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#4f5d75&quot;/&gt;
+    &lt;/marker&gt;
+    &lt;marker id=&quot;arrow-accent&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;
+      &lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#bf4520&quot;/&gt;
+    &lt;/marker&gt;
+    &lt;marker id=&quot;arrow-link&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;
+      &lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#2e5aa8&quot;/&gt;
+    &lt;/marker&gt;
+        &lt;/defs&gt;
+
+        &lt;rect width=&quot;100%&quot; height=&quot;100%&quot; fill=&quot;#f5f5f5&quot;/&gt;
+
+        &lt;!-- Arrows first, then nodes: lines must sit behind boxes. --&gt;
+
+        &lt;!-- ── 连线先画：线必须落在盒子后面 ── --&gt;
+        &lt;line x1=&quot;200&quot; y1=&quot;292&quot; x2=&quot;256&quot; y2=&quot;292&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+        &lt;line x1=&quot;416&quot; y1=&quot;292&quot; x2=&quot;472&quot; y2=&quot;292&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+        &lt;line x1=&quot;632&quot; y1=&quot;292&quot; x2=&quot;688&quot; y2=&quot;292&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+        &lt;line x1=&quot;552&quot; y1=&quot;336&quot; x2=&quot;552&quot; y2=&quot;440&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+        &lt;line x1=&quot;784&quot; y1=&quot;336&quot; x2=&quot;784&quot; y2=&quot;440&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+
+        &lt;!-- 箭头标签：不透明遮罩 + 与描边留 8px 间隙，绝不压线 --&gt;
+        &lt;rect x=&quot;560&quot; y=&quot;380&quot; width=&quot;88&quot; height=&quot;16&quot; fill=&quot;#f5f5f5&quot;/&gt;
+        &lt;text x=&quot;564&quot; y=&quot;392&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;500&quot; fill=&quot;#4f5d75&quot;&gt;按类型取数&lt;/text&gt;
+
+        &lt;!-- ── 节点 ── --&gt;
+        &lt;rect x=&quot;40&quot; y=&quot;248&quot; width=&quot;160&quot; height=&quot;88&quot; rx=&quot;6&quot; fill=&quot;rgba(79,93,117,0.10)&quot; stroke=&quot;#5a6580&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;120&quot; y=&quot;288&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;WorkBuddy 会话&lt;/text&gt;
+        &lt;text x=&quot;120&quot; y=&quot;308&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;tools/call&lt;/text&gt;
+        &lt;rect x=&quot;256&quot; y=&quot;248&quot; width=&quot;160&quot; height=&quot;88&quot; rx=&quot;6&quot; fill=&quot;rgba(191,69,32,0.08)&quot; stroke=&quot;#bf4520&quot; stroke-width=&quot;1.2&quot;/&gt;
+        &lt;text x=&quot;336&quot; y=&quot;288&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;Bearer 鉴权&lt;/text&gt;
+        &lt;text x=&quot;336&quot; y=&quot;308&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;:8400/mcp&lt;/text&gt;
+        &lt;rect x=&quot;472&quot; y=&quot;248&quot; width=&quot;160&quot; height=&quot;88&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;552&quot; y=&quot;288&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;会话 + 分发&lt;/text&gt;
+        &lt;text x=&quot;552&quot; y=&quot;308&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;Mcp-Session-Id&lt;/text&gt;
+        &lt;rect x=&quot;688&quot; y=&quot;248&quot; width=&quot;192&quot; height=&quot;88&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;784&quot; y=&quot;288&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;机械自检&lt;/text&gt;
+        &lt;text x=&quot;784&quot; y=&quot;308&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;diagram_check&lt;/text&gt;
+        &lt;rect x=&quot;472&quot; y=&quot;440&quot; width=&quot;160&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;552&quot; y=&quot;480&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;类型目录&lt;/text&gt;
+        &lt;text x=&quot;552&quot; y=&quot;500&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;catalog.json&lt;/text&gt;
+        &lt;rect x=&quot;688&quot; y=&quot;440&quot; width=&quot;192&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;784&quot; y=&quot;480&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;交付物&lt;/text&gt;
+        &lt;text x=&quot;784&quot; y=&quot;500&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;host writes .html&lt;/text&gt;
+
+
+    &lt;!-- legend: horizontal bottom strip (never floating inside the diagram area) --&gt;
+    &lt;line x1=&quot;40&quot; y1=&quot;548&quot; x2=&quot;920&quot; y2=&quot;548&quot; stroke=&quot;rgba(45,49,66,0.12)&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;rect x=&quot;40&quot; y=&quot;556&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;2&quot; fill=&quot;rgba(79,93,117,0.10)&quot; stroke=&quot;#5a6580&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;text x=&quot;64&quot; y=&quot;568&quot; font-family=&quot;'Geist Mono', ui-monospace, monospace&quot; font-size=&quot;8&quot; letter-spacing=&quot;0.06em&quot; fill=&quot;#4f5d75&quot;&gt;输入&lt;/text&gt;
+    &lt;rect x=&quot;100&quot; y=&quot;556&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;2&quot; fill=&quot;rgba(191,69,32,0.08)&quot; stroke=&quot;#bf4520&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;text x=&quot;124&quot; y=&quot;568&quot; font-family=&quot;'Geist Mono', ui-monospace, monospace&quot; font-size=&quot;8&quot; letter-spacing=&quot;0.06em&quot; fill=&quot;#4f5d75&quot;&gt;焦点（信任边界）&lt;/text&gt;
+    &lt;rect x=&quot;192&quot; y=&quot;556&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;2&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;text x=&quot;216&quot; y=&quot;568&quot; font-family=&quot;'Geist Mono', ui-monospace, monospace&quot; font-size=&quot;8&quot; letter-spacing=&quot;0.06em&quot; fill=&quot;#4f5d75&quot;&gt;服务&lt;/text&gt;
+    &lt;rect x=&quot;252&quot; y=&quot;556&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;2&quot; fill=&quot;rgba(45,49,66,0.05)&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;text x=&quot;276&quot; y=&quot;568&quot; font-family=&quot;'Geist Mono', ui-monospace, monospace&quot; font-size=&quot;8&quot; letter-spacing=&quot;0.06em&quot; fill=&quot;#4f5d75&quot;&gt;数据 / 交付物&lt;/text&gt;
+      &lt;/svg&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+  <details>
+    <summary>机械自检（0 条）</summary>
+    <ul><li class="none">没有发现问题。</li></ul>
+  </details>
+</section>
+<section class="card">
+  <header>
+    <h2>workflow.html</h2>
+    <div class="path">examples/workflow.html</div>
+    <div class="verdict"><span class="ok">通过</span> — 0 error · 0 warn</div>
+  </header>
+  <iframe sandbox="" loading="lazy" title="workflow.html 预览" srcdoc="&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;title&gt;画一张图的标准顺序&lt;/title&gt;
+  &lt;link href=&quot;https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&amp;family=Geist:wght@400;500;600&amp;family=Geist+Mono:wght@400;500;600&amp;family=Noto+Serif:ital@0;1&amp;family=Noto+Sans+KR:wght@400;500;600&amp;family=Noto+Serif+KR:wght@400&amp;family=Noto+Sans+TC:wght@400;500;600&amp;family=Noto+Serif+TC:wght@400&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+  &lt;style&gt;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --color-paper: #f5f5f5; --color-ink: #2d3142; --color-muted: #4f5d75; --color-accent: #bf4520;
+      --font-sans: 'Geist', system-ui, sans-serif;
+      --font-serif: 'Instrument Serif', 'Noto Serif', 'Noto Serif KR', 'Noto Serif TC', serif;
+      --font-mono: 'Geist Mono', ui-monospace, monospace;
+    }
+    body { font-family: var(--font-sans); background: var(--color-paper); color: var(--color-ink);
+      min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 3rem 2rem; }
+    .frame { max-width: 1200px; width: 100%; }
+    .diagram-container { width: 100%; overflow-x: auto; }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.66rem; font-weight: 500; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--color-muted); margin-bottom: 0.5rem; }
+    h1 { font-family: var(--font-serif); font-size: clamp(1.5rem, 2.4vw + 0.75rem, 2rem); font-weight: 400;
+      letter-spacing: -0.02em; line-height: 1.15; color: var(--color-ink); margin-bottom: 1.5rem; }
+    svg { width: 100%; min-width: 960px; display: block; }
+    @media print { .diagram-container { overflow-x: visible; } svg { min-width: 0; } }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;frame&quot;&gt;
+    &lt;p class=&quot;eyebrow&quot;&gt;flowchart · Diagram Design&lt;/p&gt;
+    &lt;h1&gt;画一张图的标准顺序&lt;/h1&gt;
+
+    &lt;div class=&quot;diagram-container&quot;&gt;
+      &lt;svg viewBox=&quot;0 0 960 600&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot; role=&quot;img&quot; aria-labelledby=&quot;画一张图的标准顺序-title 画一张图的标准顺序-desc&quot;&gt;
+        &lt;title id=&quot;画一张图的标准顺序-title&quot;&gt;画一张图的标准顺序&lt;/title&gt;
+        &lt;desc id=&quot;画一张图的标准顺序-desc&quot;&gt;从选型到自检的五个步骤：先定类型，再定尺寸，取设计令牌，搭合规骨架，最后跑机械自检。&lt;/desc&gt;
+        &lt;defs&gt;
+    &lt;marker id=&quot;arrow&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;
+      &lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#4f5d75&quot;/&gt;
+    &lt;/marker&gt;
+    &lt;marker id=&quot;arrow-accent&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;
+      &lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#bf4520&quot;/&gt;
+    &lt;/marker&gt;
+    &lt;marker id=&quot;arrow-link&quot; markerWidth=&quot;8&quot; markerHeight=&quot;6&quot; refX=&quot;7&quot; refY=&quot;3&quot; orient=&quot;auto&quot;&gt;
+      &lt;polygon points=&quot;0 0, 8 3, 0 6&quot; fill=&quot;#2e5aa8&quot;/&gt;
+    &lt;/marker&gt;
+        &lt;/defs&gt;
+
+        &lt;rect width=&quot;100%&quot; height=&quot;100%&quot; fill=&quot;#f5f5f5&quot;/&gt;
+
+        &lt;!-- Arrows first, then nodes: lines must sit behind boxes. --&gt;
+
+        &lt;!-- ── 连线先画：线必须落在盒子后面 ── --&gt;
+        &lt;line x1=&quot;188&quot; y1=&quot;320&quot; x2=&quot;220&quot; y2=&quot;320&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+        &lt;line x1=&quot;372&quot; y1=&quot;320&quot; x2=&quot;404&quot; y2=&quot;320&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+        &lt;line x1=&quot;556&quot; y1=&quot;320&quot; x2=&quot;588&quot; y2=&quot;320&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+        &lt;line x1=&quot;740&quot; y1=&quot;320&quot; x2=&quot;772&quot; y2=&quot;320&quot; stroke=&quot;#4f5d75&quot; stroke-width=&quot;1&quot; marker-end=&quot;url(#arrow)&quot;/&gt;
+
+        &lt;!-- ── 节点 ── --&gt;
+        &lt;rect x=&quot;36&quot; y=&quot;280&quot; width=&quot;152&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;rgba(79,93,117,0.10)&quot; stroke=&quot;#5a6580&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;112&quot; y=&quot;320&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;选型&lt;/text&gt;
+        &lt;text x=&quot;112&quot; y=&quot;340&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;diagram_types&lt;/text&gt;
+        &lt;rect x=&quot;220&quot; y=&quot;280&quot; width=&quot;152&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;296&quot; y=&quot;320&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;定尺寸&lt;/text&gt;
+        &lt;text x=&quot;296&quot; y=&quot;340&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;diagram_sizes&lt;/text&gt;
+        &lt;rect x=&quot;404&quot; y=&quot;280&quot; width=&quot;152&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;480&quot; y=&quot;320&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;取令牌&lt;/text&gt;
+        &lt;text x=&quot;480&quot; y=&quot;340&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;diagram_tokens&lt;/text&gt;
+        &lt;rect x=&quot;588&quot; y=&quot;280&quot; width=&quot;152&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+        &lt;text x=&quot;664&quot; y=&quot;320&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;搭骨架&lt;/text&gt;
+        &lt;text x=&quot;664&quot; y=&quot;340&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;diagram_scaffold&lt;/text&gt;
+        &lt;rect x=&quot;772&quot; y=&quot;280&quot; width=&quot;152&quot; height=&quot;80&quot; rx=&quot;6&quot; fill=&quot;rgba(191,69,32,0.08)&quot; stroke=&quot;#bf4520&quot; stroke-width=&quot;1.2&quot;/&gt;
+        &lt;text x=&quot;848&quot; y=&quot;320&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif&quot; font-size=&quot;12&quot; font-weight=&quot;600&quot; fill=&quot;#2d3142&quot;&gt;自检&lt;/text&gt;
+        &lt;text x=&quot;848&quot; y=&quot;340&quot; text-anchor=&quot;middle&quot; font-family=&quot;'Geist Mono',ui-monospace,monospace&quot; font-size=&quot;9&quot; fill=&quot;#5a6580&quot;&gt;diagram_check&lt;/text&gt;
+
+
+    &lt;!-- legend: horizontal bottom strip (never floating inside the diagram area) --&gt;
+    &lt;line x1=&quot;40&quot; y1=&quot;548&quot; x2=&quot;920&quot; y2=&quot;548&quot; stroke=&quot;rgba(45,49,66,0.12)&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;rect x=&quot;40&quot; y=&quot;556&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;2&quot; fill=&quot;rgba(79,93,117,0.10)&quot; stroke=&quot;#5a6580&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;text x=&quot;64&quot; y=&quot;568&quot; font-family=&quot;'Geist Mono', ui-monospace, monospace&quot; font-size=&quot;8&quot; letter-spacing=&quot;0.06em&quot; fill=&quot;#4f5d75&quot;&gt;入口&lt;/text&gt;
+    &lt;rect x=&quot;100&quot; y=&quot;556&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;2&quot; fill=&quot;#ffffff&quot; stroke=&quot;#2d3142&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;text x=&quot;124&quot; y=&quot;568&quot; font-family=&quot;'Geist Mono', ui-monospace, monospace&quot; font-size=&quot;8&quot; letter-spacing=&quot;0.06em&quot; fill=&quot;#4f5d75&quot;&gt;服务&lt;/text&gt;
+    &lt;rect x=&quot;160&quot; y=&quot;556&quot; width=&quot;16&quot; height=&quot;16&quot; rx=&quot;2&quot; fill=&quot;rgba(191,69,32,0.08)&quot; stroke=&quot;#bf4520&quot; stroke-width=&quot;1&quot;/&gt;
+    &lt;text x=&quot;184&quot; y=&quot;568&quot; font-family=&quot;'Geist Mono', ui-monospace, monospace&quot; font-size=&quot;8&quot; letter-spacing=&quot;0.06em&quot; fill=&quot;#4f5d75&quot;&gt;质量关卡&lt;/text&gt;
+      &lt;/svg&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+  <details>
+    <summary>机械自检（0 条）</summary>
+    <ul><li class="none">没有发现问题。</li></ul>
+  </details>
+</section>
+</body>
+</html>

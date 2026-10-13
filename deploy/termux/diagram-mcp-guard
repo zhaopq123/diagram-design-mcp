@@ -1,0 +1,77 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ============================================================
+# diagram-mcp-guard —— WorkBuddy 图表设计 MCP（:8400）守护脚本
+#
+# 运行位置：Termux 层（原生 node v24），**不进 proot**。
+#   理由：这个服务是纯 Node + 一个依赖，Termux 自带 node 足够；
+#   进 proot 只会多一层 --kill-on-exit 的坑（容器一退，守护全死）。
+#
+# 与 mcp-imagegen-guard / ubuntu-autostart 同款模式：
+#   tmux 会话 + while 循环 + 端口检测幂等 —— 可反复执行，在跑的自动跳过。
+#
+# 管理命令：diagram-mcp-ctl status | restart | logs
+# ============================================================
+export PATH=/data/data/com.termux/files/usr/bin:$PATH
+export HOME=/data/data/com.termux/files/home
+APP="$HOME/workbuddy-diagram-design"
+LOGDIR="$HOME/logs"
+LOGFILE="$LOGDIR/diagram-mcp.log"
+SESSION=svc-diagram
+PORT=8400
+
+port_up() { netstat -tln 2>/dev/null | grep -q ":$1 "; }
+
+echo "===== $(date '+%F %T') 启动 diagram-mcp ====="
+
+mkdir -p "$LOGDIR"
+
+# 日志超过 5MB 先滚动一次，别让手机存储被慢慢吃掉
+if [ -f "$LOGFILE" ]; then
+  size=$(wc -c < "$LOGFILE" 2>/dev/null || echo 0)
+  if [ "$size" -gt 5242880 ]; then
+    mv -f "$LOGFILE" "$LOGFILE.1"
+    echo "[svc-diagram] 日志已滚动到 $LOGFILE.1"
+  fi
+fi
+
+if port_up "$PORT"; then
+  echo "[svc-diagram] :$PORT 已在运行，跳过"
+  exit 0
+fi
+
+# 配置缺失直接报错退出，别让守护循环空转刷日志
+if [ ! -f "$APP/config.env" ]; then
+  echo "[svc-diagram] 缺少 $APP/config.env —— 拒绝启动" >&2
+  exit 2
+fi
+if [ ! -d "$APP/node_modules/@modelcontextprotocol" ]; then
+  echo "[svc-diagram] 依赖未安装 —— 先跑 npm i --registry=https://registry.npmmirror.com" >&2
+  exit 3
+fi
+
+# 用 `bash run.sh` 而不是直接 exec：部署时若执行位被冲掉，
+# 直接 exec 会 Permission denied 然后守护循环静默空转（shared-memory 踩过）。
+tmux has-session -t "$SESSION" 2>/dev/null && tmux kill-session -t "$SESSION"
+tmux new-session -d -s "$SESSION" \
+  "while true; do bash $APP/deploy/run.sh >> $LOGFILE 2>&1; echo \"[\$(date '+%F %T')] svc-diagram exited, retry in 10s\" >> $LOGFILE; sleep 10; done"
+
+# 轮询等待就绪。窗口给到 45 秒：手机刚跑完重负载（例如 node --test 要 20 秒）
+# 时 node 冷启动会明显变慢，固定 20 秒会误判"启动失败"（踩过）。
+# 超时也不直接判死——再等一轮确认，报"仍在启动"而不是假装它失败了。
+ready=0
+for i in $(seq 1 45); do
+  if port_up "$PORT"; then ready=1; break; fi
+  sleep 1
+done
+
+if [ "$ready" -eq 1 ]; then
+  echo "[svc-diagram] 已启动 (:$PORT 守护中，日志 $LOGFILE)"
+  echo "===== 完成 ====="
+  exit 0
+fi
+
+echo "[svc-diagram] 45 秒内未就绪 —— 进程可能仍在冷启动，也可能真的起不来。"
+echo "              先跑 \`diagram-mcp-ctl status\` 确认，再决定是否排查。"
+echo "              日志最后 20 行："
+tail -n 20 "$LOGFILE" 2>/dev/null
+exit 1

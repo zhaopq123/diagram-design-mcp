@@ -1,0 +1,166 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# ============================================================
+# diagram-mcp-ctl —— WorkBuddy 图表设计 MCP 运维入口
+#
+#   diagram-mcp-ctl status    端口 + 会话 + 健康检查 + 配置漂移 + 最近日志
+#   diagram-mcp-ctl restart   重启服务
+#   diagram-mcp-ctl stop      停服务（含守护循环）
+#   diagram-mcp-ctl logs      跟踪日志
+#   diagram-mcp-ctl token     打印访问 token（给 WorkBuddy 配置用）
+# ============================================================
+export PATH=/data/data/com.termux/files/usr/bin:$PATH
+export HOME=/data/data/com.termux/files/home
+APP="$HOME/workbuddy-diagram-design"
+LOGFILE="$HOME/logs/diagram-mcp.log"
+SESSION=svc-diagram
+PORT=8400
+
+port_up() { netstat -tln 2>/dev/null | grep -q ":$1 "; }
+
+# 注意 serve[r] 的方括号：pkill -f 会匹配整条命令行，写成 server.mjs 时
+# 连"执行这条命令的 shell"自己都会被匹配上，直接把自己杀掉（ssh 掉线 255）。
+kill_app() { pkill -f "diagram-design/src/serve[r]\.mjs" 2>/dev/null; }
+
+app_pid() { pgrep -f "diagram-design/src/serve[r]\.mjs" 2>/dev/null | head -1; }
+
+# 值里含 TOKEN 的只打印长度，别把密钥写进日志/截图。
+mask() {
+  case "$1" in
+    *TOKEN*) printf '%s' "$2" | wc -c | tr -d ' ' | sed 's/^/<len /;s/$/>/' ;;
+    *) printf '%s' "$2" ;;
+  esac
+}
+
+# 配置漂移检测。
+#
+# 存在的理由是一次真事故：`config.env` 里写了 DIAGRAM_MCP_IDLE_MS /
+# DIAGRAM_MCP_MAX_SESSIONS，但 run.sh 只用 `. config.env`（设 shell 变量）
+# 再手动 export 了三个键，于是这两个键从没进过 node——/health 一直报编译期
+# 默认值，而所有测试都是绿的（断言只验"字段存在且为正数"）。
+# 所以这里比对的是「运维写的」与「进程真正拿到的」，不是文档也不是默认值。
+drift_check() {
+  local pid="$1"
+  echo "── 配置漂移 ──"
+  if [ -z "$pid" ]; then
+    echo "  服务未运行，跳过"
+    return
+  fi
+  if [ ! -r "/proc/$pid/environ" ]; then
+    echo "  读不到 /proc/$pid/environ，跳过"
+    return
+  fi
+
+  local drift=0 line key want got
+  while IFS= read -r line; do
+    case "$line" in
+      ''|'#'*) continue ;;
+    esac
+    key="${line%%=*}"
+    want="${line#*=}"
+    case "$key" in
+      DIAGRAM_MCP_*) ;;
+      *) continue ;;
+    esac
+    got="$(tr '\0' '\n' < "/proc/$pid/environ" 2>/dev/null | grep "^$key=" | head -1)"
+    got="${got#*=}"
+    if [ "$got" != "$want" ]; then
+      echo "  ✗ $key: config.env=$(mask "$key" "$want") ≠ 进程=$(mask "$key" "${got:-<未设置>}")"
+      drift=1
+    fi
+  done < "$APP/config.env"
+
+  if [ "$drift" -eq 0 ]; then
+    echo "  ✓ config.env 里的 DIAGRAM_MCP_* 已全部生效"
+  else
+    echo "  → 要么改完 config.env 没重启，要么启动脚本漏了导出（run.sh 需要 set -a）"
+  fi
+}
+
+# 第二道：从 config.env → 进程 → /health 闭环。
+#
+# drift_check 只证明"变量进了进程"，不证明"代码真的读了它"。若代码里变量名
+# 拼错（config.env 写 DIAGRAM_MCP_MAX_SESSIONS，代码读 ..._SESSIONS_MAX），
+# 环境是对的、/health 却是默认值——上一道查不出来，这道能。
+health_config_check() {
+  echo "── 配置 ↔ /health ──"
+  local h max idle cmax cidle
+  h="$(curl -s -m 5 "http://127.0.0.1:$PORT/health" 2>/dev/null)"
+  if [ -z "$h" ]; then
+    echo "  /health 无响应，跳过"
+    return
+  fi
+  # 不依赖 jq：Termux 上不一定装。值都是整数，直接抠。
+  jget() { printf '%s' "$1" | tr -d ' ' | grep -o "\"$2\":[^,}]*" | head -1 | cut -d: -f2; }
+  max="$(jget "$h" maxSessions)"
+  idle="$(jget "$h" idleMs)"
+
+  local bad=0
+  cmax="$(grep '^DIAGRAM_MCP_MAX_SESSIONS=' "$APP/config.env" 2>/dev/null | cut -d= -f2-)"
+  cidle="$(grep '^DIAGRAM_MCP_IDLE_MS=' "$APP/config.env" 2>/dev/null | cut -d= -f2-)"
+
+  if [ -n "$cmax" ] && [ "$max" != "$cmax" ]; then
+    echo "  ✗ maxSessions: config.env=$cmax ≠ /health=$max"
+    bad=1
+  fi
+  if [ -n "$cidle" ] && [ "$idle" != "$cidle" ]; then
+    echo "  ✗ idleMs: config.env=$cidle ≠ /health=$idle"
+    bad=1
+  fi
+  if [ "$bad" -eq 0 ]; then
+    echo "  ✓ maxSessions=$max idleMs=$idle，与 config.env 一致"
+  else
+    echo "  → 进程环境正确但 /health 不对：要么改完 config.env 没重启，要么代码里变量名拼错"
+  fi
+}
+
+case "${1:-status}" in
+  status)
+    echo "── 端口 ──"
+    if port_up "$PORT"; then
+      netstat -tln 2>/dev/null | grep ":$PORT "
+    else
+      echo ":$PORT 未监听"
+    fi
+    echo "── tmux 会话 ──"
+    tmux has-session -t "$SESSION" 2>/dev/null \
+      && echo "$SESSION 存活" || echo "$SESSION 不存在"
+    echo "── 健康检查 ──"
+    curl -s -m 5 "http://127.0.0.1:$PORT/health" || echo "(无响应)"
+    echo
+    drift_check "$(app_pid)"
+    health_config_check
+    echo "── 最近 10 行日志 ──"
+    tail -n 10 "$LOGFILE" 2>/dev/null || echo "(暂无日志)"
+    ;;
+  restart)
+    tmux kill-session -t "$SESSION" 2>/dev/null
+    kill_app
+    # 等旧进程真的把端口放掉再启新的。不等的话，新进程会撞 EADDRINUSE，
+    # 而守卫的端口检测又会被"旧进程还在监听"骗成成功——两头都错。
+    for i in $(seq 1 15); do
+      port_up "$PORT" || break
+      sleep 1
+    done
+    if port_up "$PORT"; then
+      echo "旧进程 15 秒内没释放 :$PORT，中止重启（避免双实例）。" >&2
+      exit 1
+    fi
+    diagram-mcp-guard
+    ;;
+  stop)
+    tmux kill-session -t "$SESSION" 2>/dev/null
+    kill_app
+    sleep 1
+    port_up "$PORT" && echo "仍占用 :$PORT" || echo "已停止"
+    ;;
+  logs)
+    tail -n 100 -f "$LOGFILE"
+    ;;
+  token)
+    grep '^DIAGRAM_MCP_TOKEN=' "$APP/config.env" 2>/dev/null | cut -d= -f2-
+    ;;
+  *)
+    echo "用法: diagram-mcp-ctl {status|restart|stop|logs|token}" >&2
+    exit 2
+    ;;
+esac
