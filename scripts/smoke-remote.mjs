@@ -2,7 +2,7 @@
  * Remote end-to-end smoke test — talks to the DEPLOYED server over the LAN.
  *
  * Run:
- *   DIAGRAM_MCP_URL=http://192.168.3.35:8400/mcp \
+ *   DIAGRAM_MCP_URL=http://<host>:8400/mcp \
  *   DIAGRAM_MCP_TOKEN=<token> \
  *   node scripts/smoke-remote.mjs
  *
@@ -18,7 +18,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 
-const URL_ = process.env.DIAGRAM_MCP_URL ?? 'http://192.168.3.35:8400/mcp'
+const URL_ = process.env.DIAGRAM_MCP_URL ?? 'http://localhost:8400/mcp'
 const TOKEN = process.env.DIAGRAM_MCP_TOKEN ?? ''
 
 let pass = 0

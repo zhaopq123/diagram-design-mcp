@@ -91,7 +91,7 @@ npm start
 两个容易踩的点：
 
 - **配置不热重载。** 改完 `mcp.json` 要么重开应用，要么打开上面那个页面触发一次刷新（对应 `mcpRefresh` 通道）。直接改文件然后等，是等不到的。
-- **信任键绑的是 URL 的 origin，不是完整 URL。** 上游实现是 `sha256(new URL(url).origin)`，再拼服务名——即 `diagram-design::sha256("http://192.168.3.35:8400")`。所以 `/mcp` 路径改了不影响，**端口或主机改了要重新确认一次**。
+- **信任键绑的是 URL 的 origin，不是完整 URL。** 上游实现是 `sha256(new URL(url).origin)`，再拼服务名——即 `diagram-design::sha256("http://<host>:8400")`。所以 `/mcp` 路径改了不影响，**端口或主机改了要重新确认一次**。
 
 ```js
 // 信任键的推导（摘自应用实现）

@@ -14,7 +14,7 @@ import { readFile } from 'node:fs/promises'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 
-const BASE = (process.env.DIAGRAM_MCP_URL ?? 'http://192.168.3.35:8400/mcp').replace(/\/mcp$/, '')
+const BASE = (process.env.DIAGRAM_MCP_URL ?? 'http://localhost:8400/mcp').replace(/\/mcp$/, '')
 const URL_ = `${BASE}/mcp`
 const TOKEN = process.env.DIAGRAM_MCP_TOKEN ?? ''
 if (TOKEN.length === 0) {
