@@ -1,0 +1,14 @@
+# Force LF in the repository regardless of the platform checking out.
+#
+# Not cosmetics: deploy/run.sh, deploy/termux/diagram-mcp-ctl and
+# deploy/termux/diagram-mcp-guard are executed by bash on Android/Termux. A
+# CRLF line ending there is not "ugly", it makes the kernel resolve the shebang
+# to `/usr/bin/bash\r` and the script dies with "bad interpreter: no such file
+# or directory" — which looks nothing like a line-ending bug. Windows defaults
+# to autocrlf=true, which would otherwise smuggle CRLF in on the next commit.
+* text=auto eol=lf
+
+# Binary or generated-in-place assets: never rewrite.
+*.png binary
+*.jpg binary
+*.html text eol=lf
