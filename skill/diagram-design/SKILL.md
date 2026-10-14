@@ -30,6 +30,8 @@ description: 画专业级图表（架构图、流程图、时序图、状态机�
 - **焦点色 `accent` 每图最多 1–2 处**。其余一律 `ink` / `muted` / `soft`。全图都在喊 = 没人在喊。
 - **节点 ≤ 9、箭头 ≤ 12**。超了就拆成"总览 + 细节"两张图。
 - **连线画在节点之前**（线必须在盒子后面）。
+- **箭头标签要压在遮罩上，且两边都带 class**：标签 `<text class="arrow-label">`，遮罩 `<rect class="label-mask">`。检查器按**几何**判定——标签的 x/y 必须真的落在某个遮罩矩形内，遮罩错位一样算不合格。少写 class 等于没有遮罩，直接判 error。`diagram_scaffold` 的 `elbow({label})` 已经把这对 class 配好了，手写时照抄。
+- **结构色一律写 `var(--color-*)`，不要写死 hex**。皮肤（`light`/`dark`）就是靠 `:root` 里换这套变量实现的；写死 hex 的图换不动皮肤，暗色下会变成暗底暗字。可用的变量：`paper` `paper-2` `ink` `muted` `soft` `rule` `accent` `accent-tint` `link`。
 - **`min-width` 必须等于 viewBox 宽度**，SVG 放在局部 `overflow-x: auto` 容器里。否则窄屏把整张图连同字号一起缩下去。
 - **无障碍契约**：`<svg role="img" aria-labelledby="<slug>-title <slug>-desc">`，`<title>` 必须是 `<svg>` 的第一个子元素且带 id（不能是裸 `title`）。
 - **单文件自足**：除字体样式表外不许有外链。

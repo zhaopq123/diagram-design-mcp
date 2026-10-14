@@ -53,6 +53,26 @@ async function connect(name = 'wbdd-audit') {
   return { client, transport }
 }
 
+/**
+ * Terminate sessions and REPORT failures instead of swallowing them.
+ *
+ * The previous version was `.catch(() => {})` on every call. When one DELETE
+ * failed, the only visible symptom was "session count came back one higher than
+ * the baseline" — a number that looked like a server-side leak, with no clue
+ * that the cleanup itself had quietly failed. A cleanup that hides its own
+ * errors turns a test bug into a false product bug.
+ */
+async function terminateAll(pairs, label) {
+  const results = await Promise.all(pairs.map((pair) => pair.transport.terminateSession()
+    .then(() => null)
+    .catch((error) => String(error?.message ?? error))))
+  const failed = results.filter((entry) => entry !== null)
+  if (failed.length > 0) {
+    console.log(`  info ${label}：${failed.length}/${pairs.length} 个终止失败 — ${failed.slice(0, 2).join('; ')}`)
+  }
+  return failed.length
+}
+
 async function main() {
   section('HTTP 层：异常请求不得打挂服务')
   const before = await health()
@@ -102,7 +122,7 @@ async function main() {
   ok('/health 免鉴权可用', healthNoAuth.status === 200)
 
   section('工具层：异常入参')
-  const { client } = await connect()
+  const { client, transport: mainTransport } = await connect()
 
   const unknown = await client.callTool({ name: 'no_such_tool', arguments: {} })
   ok('未知工具 → isError，会话存活', unknown.isError === true, JSON.stringify(unknown).slice(0, 100))
@@ -175,6 +195,62 @@ async function main() {
     }
   }
 
+  // ── 承诺是否兑现：不只是"没报错" ─────────────────────────────────────────
+  // 上面那轮只断言自检无 error。自检判不了对比度，所以旧版"深画布 + 白盒 +
+  // 暗字"的暗色文档同样能过——这条链路曾经对缺陷全绿。下面直接验用户能看到
+  // 的东西：暗色文档必须真的是暗的，皮肤必须真的传到了图元上。
+  section('工具层：皮肤承诺真的兑现（暗色得是暗的）')
+  const lum = (hex) => {
+    const m = /^#([0-9a-f]{6})$/i.exec(hex ?? '')
+    if (m === null) return null
+    const n = Number.parseInt(m[1], 16)
+    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => v / 255)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  const paperOf = (html) => html.match(/--color-paper:\s*(#[0-9a-f]{6})/i)?.[1]
+  const inkOf = (html) => html.match(/--color-ink:\s*(#[0-9a-f]{6})/i)?.[1]
+  const bodyOf = (html) => html.slice(html.indexOf('<body>'))
+
+  const lightDoc = (await client.callTool({ name: 'diagram_scaffold', arguments: { title: 'skin light', type: 'architecture', desc: 'd', skin: 'light' } })).content[1].text
+  const darkDoc = (await client.callTool({ name: 'diagram_scaffold', arguments: { title: 'skin dark', type: 'architecture', desc: 'd', skin: 'dark' } })).content[1].text
+  const lp = paperOf(lightDoc); const dp = paperOf(darkDoc)
+  const li = inkOf(lightDoc); const di = inkOf(darkDoc)
+
+  ok('两种皮肤的 --color-paper 不同', lp !== dp, `light=${lp} dark=${dp}`)
+  ok('亮色 paper 确实是浅色（亮度 > 0.5）', (lum(lp) ?? -1) > 0.5, `luminance=${lum(lp)?.toFixed(3)}`)
+  ok('暗色 paper 确实是深色（亮度 < 0.5）', (lum(dp) ?? 9) < 0.5, `luminance=${lum(dp)?.toFixed(3)}`)
+  // 文字与底色的明暗必须相反，否则就是"暗底暗字"那种不可读文档。
+  ok('亮色：深字压浅底', (lum(li) ?? 9) < (lum(lp) ?? -1), `ink=${li} paper=${lp}`)
+  ok('暗色：浅字压深底', (lum(di) ?? -1) > (lum(dp) ?? 9), `ink=${di} paper=${dp}`)
+
+  // 皮肤必须传到图元，而不是只改背景那一格。
+  ok('暗色 body 里不残留亮色 paper/ink 硬编码', !bodyOf(darkDoc).includes(lp) && !bodyOf(darkDoc).includes(li),
+    'body 段出现了亮色硬编码 → skin 没有贯穿到图元')
+  ok('结构色走 CSS 变量（body 引用 var(--color-*)）', /var\(--color-/.test(bodyOf(darkDoc)),
+    'body 段没有 var(--color-*) 引用')
+
+  // ── 生成器必须发出检查器需要的钩子 ──────────────────────────────────────
+  // 遮罩门禁曾经永远通过：它数"任意正尺寸矩形"，而节点盒子必然存在；它找的
+  // class="arrow-label" 生成器又从未输出过。这条断言把两侧的契约钉在一起。
+  section('工具层：生成器 ↔ 检查器契约（标签遮罩）')
+  const maskedBody = [
+    '<rect class="label-mask" x="160" y="104" width="80" height="16" fill="var(--color-paper)"/>',
+    '<text class="arrow-label" x="200" y="116" font-size="8" text-anchor="middle">GET /v2</text>',
+  ].join('\n')
+  const maskedDoc = (await client.callTool({ name: 'diagram_scaffold', arguments: { title: 'masked', type: 'architecture', desc: 'd', body: maskedBody } })).content[1].text
+  const maskedReport = textOf(await client.callTool({ name: 'diagram_check', arguments: { html: maskedDoc } }))
+  ok('有遮罩的标签不报 connector-label-mask', !maskedReport.includes('connector-label-mask'), '误报')
+
+  const bareDoc = (await client.callTool({ name: 'diagram_scaffold', arguments: { title: 'bare', type: 'architecture', desc: 'd', body: '<text class="arrow-label" x="200" y="116" font-size="8" text-anchor="middle">GET /v2</text>' } })).content[1].text
+  const bareReport = textOf(await client.callTool({ name: 'diagram_check', arguments: { html: bareDoc } }))
+  ok('没有遮罩的标签必须报 connector-label-mask', bareReport.includes('connector-label-mask'),
+    '门禁放过了没有遮罩的标签 → 这条检查恒真')
+
+  const offsetDoc = (await client.callTool({ name: 'diagram_scaffold', arguments: { title: 'offset', type: 'architecture', desc: 'd', body: ['<rect class="label-mask" x="600" y="104" width="80" height="16" fill="var(--color-paper)"/>', '<text class="arrow-label" x="200" y="116" font-size="8" text-anchor="middle">GET /v2</text>'].join('\n') } })).content[1].text
+  const offsetReport = textOf(await client.callTool({ name: 'diagram_check', arguments: { html: offsetDoc } }))
+  ok('遮罩没盖住标签时仍要报（几何判定，不是数矩形）', offsetReport.includes('connector-label-mask'),
+    '只问"图里有没有矩形"，没做几何覆盖判定')
+
   section('工具层：恶意内容不得穿透')
   const injected = await client.callTool({ name: 'diagram_scaffold', arguments: { title: 'x', type: 'architecture', desc: 'd', body: '</svg></body><script>alert(1)</script><svg>' } })
   const injectedHtml = injected.content[1].text
@@ -184,6 +260,12 @@ async function main() {
   const unicode = await client.callTool({ name: 'diagram_scaffold', arguments: { title: '🎯 标题 with émoji & 中文 & RTL: العربية', type: 'architecture', desc: 'd' } })
   ok('emoji / RTL / 混排标题可生成', unicode.content[1].text.startsWith('<!DOCTYPE html>'))
 
+  // The audit's OWN client must not be left behind either. `client.close()`
+  // does not send DELETE (that is the very behaviour asserted above), so a bare
+  // close leaked exactly one session per run — and because the assertion below
+  // compared against a same-run baseline, the accumulation was invisible:
+  // 12 → 13 → 14 across three consecutive runs, every one "passing".
+  await terminateAll([{ transport: mainTransport }], '审计主客户端')
   await client.close()
   section('会话生命周期')
   const baseline = await health()
@@ -198,7 +280,7 @@ async function main() {
   const during = await health()
   ok('20 个会话被登记', during.sessions >= baseline.sessions + 20, `${baseline.sessions} → ${during.sessions}`)
 
-  await Promise.all(clean.map((pair) => pair.transport.terminateSession().catch(() => {})))
+  await terminateAll(clean, 'clean 组')
   await new Promise((resolve) => setTimeout(resolve, 1200))
   const afterTerminate = await health()
   ok('显式 DELETE 全部回收', afterTerminate.sessions <= baseline.sessions, `关闭后 ${afterTerminate.sessions}（基线 ${baseline.sessions}）`)
@@ -237,7 +319,7 @@ async function main() {
   // would sit on the server for the whole idle window, so clean them up the
   // moment the point has been proven. (They *would* be reclaimed — that is what
   // the sweeper is for — but the audit should not lean on that.)
-  await Promise.all(orphans.map((pair) => pair.transport.terminateSession().catch(() => {})))
+  await terminateAll(orphans, 'orphan 组')
   await new Promise((resolve) => setTimeout(resolve, 1200))
   const afterCleanup = await health()
   ok(
@@ -250,7 +332,8 @@ async function main() {
   const concurrent = await Promise.all(Array.from({ length: 12 }, async (_, i) => {
     const pair = await connect(`burst-${i}`)
     const r = await pair.client.callTool({ name: 'diagram_types', arguments: { query: '架构' } })
-    await pair.transport.terminateSession().catch(() => {})
+    const failure = await pair.transport.terminateSession().then(() => null).catch((error) => String(error?.message ?? error))
+    if (failure !== null) console.log(`  info burst-${i} 终止失败 — ${failure}`)
     return textOf(r).length > 50
   }))
   ok('12 路并发各自正确', concurrent.every(Boolean))
@@ -261,6 +344,15 @@ async function main() {
     '整轮审计结束后会话数回到基线',
     final.sessions <= baseline.sessions,
     `基线 ${baseline.sessions} → 结束 ${final.sessions}`,
+  )
+  // Absolute check against the count taken BEFORE this audit connected.
+  // The same-run baseline above cannot see accumulation across runs — it moved
+  // in lockstep with the leak and stayed green while the server crept up one
+  // session per invocation.
+  ok(
+    '审计没有给服务留下净增量（跨轮绝对基线）',
+    final.sessions <= before.sessions,
+    `审计前 ${before.sessions} → 审计后 ${final.sessions}`,
   )
 
   console.log(`\n${'='.repeat(52)}`)

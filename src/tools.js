@@ -326,7 +326,7 @@ export const TOOLS = [
   },
   {
     name: 'diagram_check',
-    description: '对图表 HTML 跑机械自检（品味关卡）：无障碍 SVG 契约、单文件安全性、内容是否画出 viewBox、六条连线铁律中可机械判定的部分、4px 网格、圆角上限、阴影、等宽字体滥用、焦点色预算、节点预算、宿主 CSS 契约、动效的降低动效偏好处理。报告分三部分：findings（机械判定，error 必须修）、judgement（无法机械判定的编辑判断，仍是你的责任）、limits（覆盖不到什么）。**不要把"通过"当作"图很好"。**',
+    description: '对图表 HTML 跑机械自检（品味关卡）：无障碍 SVG 契约、单文件安全性、内容是否画出 viewBox、六条连线铁律中可机械判定的部分（含**箭头标签遮罩**：标签须带 `class="arrow-label"`、遮罩须带 `class="label-mask"`，且遮罩要**几何覆盖**标签坐标）、4px 网格、圆角上限、阴影、等宽字体滥用、焦点色预算（按文档自身皮肤计数）、节点预算、宿主 CSS 契约、动效的降低动效偏好处理。报告分三部分：findings（机械判定，error 必须修）、judgement（无法机械判定的编辑判断，仍是你的责任）、limits（覆盖不到什么，含**对比度不判**）。**不要把"通过"当作"图很好"。**',
     inputSchema: {
       type: 'object',
       properties: {

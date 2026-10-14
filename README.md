@@ -119,7 +119,7 @@ node scripts/smoke-remote.mjs
 > 若本机设了 `HTTP_PROXY`，局域网地址会被代理拦掉（404）。用
 > `env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy` 跑。
 
-全量边界审计（异常 HTTP 请求、鉴权变体、极端入参、45 类 × 10 尺寸档 × 2 皮肤、恶意内容穿透、会话回收、并发压力）：
+全量边界审计（异常 HTTP 请求、鉴权变体、极端入参、45 类 × 10 尺寸档 × 2 皮肤、**皮肤承诺兑现**、**生成器↔检查器契约**、恶意内容穿透、会话回收、并发压力）：
 
 ```bash
 DIAGRAM_MCP_URL=http://<host>:8400/mcp \
@@ -129,7 +129,9 @@ DIAGRAM_MCP_EXPECT_IDLE_MS=1800000 \
 node scripts/audit.mjs
 ```
 
-审计自己不留尾巴：它会故意造 15 个孤儿会话来验证回收与上限，但**在断言成立后立刻清掉**，并在结束时要求会话数回到基线。跑完就干净，不用等空闲窗口过去。
+审计自己不留尾巴：它会故意造 15 个孤儿会话来验证回收与上限，但**在断言成立后立刻清掉**，并在结束时要求会话数回到基线。它连**自己的主客户端会话**也显式回收——`client.close()` 不发 DELETE，一个裸 close 就是每跑一次漏一个会话；而且它不吞终止失败（`.catch(() => {})` 会把"清理失败"伪装成"服务端泄漏"）。
+
+两条基线断言是**互补**的：一条比本轮起点（会话回收是否工作），一条比**审计开始前**的绝对计数（跨轮有没有净增量）。只有前者时，泄漏会跟基线同步爬升而永远绿灯——实测基线 12 → 13 → 14 连过三轮。
 
 `DIAGRAM_MCP_EXPECT_*` 是可选的，但**部署后一定要带上**：不带的话只验"`/health` 有这个字段"，带了才验"值等于你配的"。少了这一层，配置漂移（变量名拼错、启动脚本漏导出）能一路绿灯放行。
 
@@ -181,7 +183,7 @@ src/
     import.js       Mermaid / draw.io / Excalidraw 解析器
     catalog.json    45 类图表目录
 test/               43 项（含 CLI 契约，2 项在禁 spawn 的环境下 skip）
-scripts/            smoke-remote.mjs（60 项端到端）· audit.mjs（67 项边界审计）· build-examples.mjs
+scripts/            smoke-remote.mjs（60 项端到端）· audit.mjs（78 项边界审计）· build-examples.mjs
 examples/           两张真图 + 图库页
 deploy/             run.sh + Termux 守护脚本
 skill/              WorkBuddy Skill 入口
