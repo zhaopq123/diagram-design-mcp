@@ -55,7 +55,7 @@ function numbersOf(svg, tag) {
   const pattern = new RegExp(`<${tag}\\b([^>]*)>`, 'gi')
   let match
   while ((match = pattern.exec(svg)) !== null) {
-    const attrs = {}
+    const attrs = { __class: match[1].match(/\bclass\s*=\s*["']([^"']*)["']/i)?.[1] }
     // Attribute names carry digits (`x1`, `y2`, `cx`, `cx1`); a letter-only
     // name class silently drops every coordinate and makes the connector and
     // containment checks no-ops that always pass.
@@ -194,10 +194,43 @@ export function checkDiagram(html, options = {}) {
 
   // ── Arrow labels must sit on an opaque mask ───────────────────────────────
   // A label drawn straight over its own stroke bleeds through the line.
-  const labelMasks = numbersOf(svg, 'rect').filter((rect) => (rect.width ?? 0) > 0 && (rect.height ?? 0) > 0).length
-  const arrowLabels = (svg.match(/class\s*=\s*["'][^"']*arrow-label/gi) ?? []).length
-  if (arrowLabels > 0 && labelMasks === 0) {
-    findings.push(finding('error', 'connector-label-mask', `有 ${arrowLabels} 个箭头标签，但整个图里没有任何遮罩矩形。`, '第 2 条铁律：标签必须压在不透明遮罩上，并与描边留 6–10px 间隙。'))
+  //
+  // This gate used to pass whenever the document contained ANY rect of positive
+  // size — and every diagram has node boxes, so it could not fail. Worse, it
+  // looked for `class*="arrow-label"`, which the generator never emitted. Two
+  // defects deep, the gate was decorative. It now does real geometry: every
+  // `arrow-label` text must be geometrically covered by some `label-mask` rect.
+  const arrowLabels = []
+  for (const match of svg.matchAll(/<text\b[^>]*\bclass\s*=\s*["'][^"']*arrow-label[^>]*>/gi)) {
+    const tag = match[0]
+    const x = Number(tag.match(/\bx\s*=\s*["'](-?[\d.]+)["']/i)?.[1])
+    const y = Number(tag.match(/\by\s*=\s*["'](-?[\d.]+)["']/i)?.[1])
+    arrowLabels.push({ tag, x: Number.isFinite(x) ? x : null, y: Number.isFinite(y) ? y : null })
+  }
+  const masks = []
+  for (const rect of numbersOf(svg, 'rect')) {
+    if (rect.__class === undefined || !/label-mask/.test(rect.__class)) continue
+    if (rect.x === undefined || rect.y === undefined || rect.width === undefined || rect.height === undefined) continue
+    masks.push(rect)
+  }
+  const uncovered = []
+  for (const label of arrowLabels) {
+    if (label.x === null || label.y === null) {
+      uncovered.push('label 缺可判定的 x/y')
+      continue
+    }
+    // 2px horizontal / 4px vertical slack: the text baseline sits a little
+    // above the mask's bottom edge in the emitted markup.
+    const covered = masks.some((m) =>
+      label.x >= m.x - 2 && label.x <= m.x + m.width + 2
+      && label.y >= m.y - 4 && label.y <= m.y + m.height + 4)
+    if (!covered) uncovered.push(`label(${label.x},${label.y}) 无遮罩`)
+  }
+  if (arrowLabels.length > 0 && uncovered.length > 0) {
+    const rule = CONNECTOR_RULES.find((entry) => entry.id === 'label-gap')
+    findings.push(finding('error', 'connector-label-mask',
+      `${uncovered.length}/${arrowLabels.length} 个箭头标签没有被任何 label-mask 遮罩盖住。${rule.text}`,
+      uncovered.slice(0, 4).join(', ')))
   }
 
   // ── Grid compliance on structural geometry ────────────────────────────────
@@ -242,8 +275,26 @@ export function checkDiagram(html, options = {}) {
   }
 
   // ── Accent budget: 1–2 focal elements ─────────────────────────────────────
-  const accent = roleValue('accent', 'light')
-  const accentCount = (svg.match(new RegExp(accent.replace('#', '#'), 'gi')) ?? []).length
+  // The gate used to resolve the accent hex with the skin hardcoded to light,
+  // so a dark diagram's accent (a different hex) was never counted and the
+  // budget silently no-opped. The skin is now read off the document's own
+  // `--color-accent` declaration; when the document speaks in CSS variables
+  // (which the generator emits), `var(--color-accent)` references are counted
+  // too — after stripping <defs>, so the one accent marker def doesn't spend
+  // the budget by existing.
+  const declaredAccent = clean.match(/--color-accent\s*:\s*(#[0-9a-f]{3,8})/i)?.[1]
+  const accentValues = []
+  for (const skin of ['light', 'dark']) {
+    const hex = roleValue('accent', skin)
+    if (declaredAccent === undefined || declaredAccent.toLowerCase() === hex.toLowerCase()) accentValues.push(hex)
+  }
+  const svgWithoutDefs = svg.replace(/<defs\b[\s\S]*?<\/defs>/gi, '')
+  const accentCount = accentValues.reduce((total, hex) => {
+    const escaped = hex.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const hexHits = svgWithoutDefs.match(new RegExp(escaped, 'gi'))?.length ?? 0
+    const varHits = svgWithoutDefs.match(/var\(\s*--color-accent\b[^)]*\)/gi)?.length ?? 0
+    return total + hexHits + varHits
+  }, 0)
   if (accentCount > BUDGET.accent * 3) {
     findings.push(finding('warn', 'accent-budget', `焦点色出现了 ${accentCount} 次。焦点色是 1–2 处编者级强调，不是信号系统。`, '若每处都重要，就等于都不重要。'))
   }
@@ -302,6 +353,7 @@ function finish(findings, options = {}) {
     '几何检查覆盖 rect / circle / line 的数值属性；路径（path）内部坐标、transform 后的实际位置未纳入。',
     '颜色语义（"这个强调色是否用在了真正焦点的位置"）无法机械判定。',
     '"是否需要分区"、"该拆图还是缩图" 属编辑判断，报告只给预算计数，不给结论。',
+    '对比度无法机械判定：本检查器不校验"文字颜色在其填充色上是否可读"。皮肤由 CSS 变量解析，生成器保证变量取值成对可读；手改变量可能做出暗底暗字。',
   ]
 
   return {

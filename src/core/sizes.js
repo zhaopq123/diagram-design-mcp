@@ -12,6 +12,8 @@
  * @module dsh-diagram-design/lib/sizes
  */
 
+import { cssVariables } from './tokens.js'
+
 /**
  * The size presets. `ramp` names a row of {@link TYPE_RAMP}.
  *
@@ -132,11 +134,25 @@ export const DEGRADE_LADDER = [
  *   - the `@media print` release comes AFTER the `svg` rule, because a media
  *     query adds no specificity and a later plain rule would win.
  */
-export function diagramCss(minWidth, ramp) {
+/**
+ * The hosting CSS every document needs.
+ *
+ * `skin` is not optional in spirit: it decides the four `--color-*` custom
+ * properties, and `body`/`h1`/`svg` all read them through `var()`. This
+ * function used to hardcode the light values, which is what made `skin: 'dark'`
+ * emit a page with a light background under a dark canvas — the palette looked
+ * swapped rather than themed. Now the values come straight from `cssVariables`,
+ * which is the same function the tools expose to callers, so there is exactly
+ * one place a hex lives.
+ *
+ * Light output is byte-for-byte what it always was.
+ */
+export function diagramCss(minWidth, ramp, skin = 'light') {
+  const colors = cssVariables(skin)
   return [
     '*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }',
     ':root {',
-    '  --color-paper: #f5f5f5; --color-ink: #2d3142; --color-muted: #4f5d75; --color-accent: #bf4520;',
+    `  ${Object.entries(colors).map(([name, value]) => `${name}: ${value}`).join('; ')};`,
     "  --font-sans: 'Geist', system-ui, sans-serif;",
     "  --font-serif: 'Instrument Serif', 'Noto Serif', 'Noto Serif KR', 'Noto Serif TC', serif;",
     "  --font-mono: 'Geist Mono', ui-monospace, monospace;",

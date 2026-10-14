@@ -39,21 +39,67 @@ export function slugify(title) {
 }
 
 /**
+ * Resolve the CSS variables the emitted shapes read from.
+ *
+ * Helpers return fragments BEFORE `scaffold()` knows the skin, so baking any
+ * skin's hex into them would repeat the shipped bug: `skin: 'dark'` reached the
+ * backdrop rect and nowhere else. Every emitted colour is therefore a
+ * `var(--color-*)` reference, and `diagramCss(skin)` resolves those variables
+ * once in `:root` for the selected skin. One place a hex lives, one place a
+ * skin swap happens.
+ */
+function paletteFor() {
+  // Emit CSS variables rather than resolved hex values. The body helpers return
+  // an SVG fragment before scaffold() receives the skin, so baking light values
+  // into the fragment makes dark mode impossible to apply consistently.
+  // CSS variables keep the fragment skin-agnostic; scaffold's :root resolves
+  // them for the selected skin at render time.
+  return {
+    paper: 'var(--color-paper)',
+    paper2: 'var(--color-paper-2)',
+    ink: 'var(--color-ink)',
+    muted: 'var(--color-muted)',
+    soft: 'var(--color-soft)',
+    accent: 'var(--color-accent)',
+    accentTint: 'var(--color-accent-tint)',
+    link: 'var(--color-link)',
+  }
+}
+
+/** Node fill/stroke combos read from the same variables, so they follow the skin. */
+function treatments() {
+  const p = paletteFor()
+  return {
+    focal: { fill: p.accentTint, stroke: p.accent, width: 1.2 },
+    backend: { fill: p.paper, stroke: p.ink, width: 1 },
+    store: { fill: p.ink, fillOpacity: 0.05, stroke: p.muted, width: 1 },
+    external: { fill: p.ink, fillOpacity: 0.03, stroke: p.ink, strokeOpacity: 0.30, width: 1 },
+    input: { fill: p.muted, fillOpacity: 0.10, stroke: p.soft, width: 1 },
+    optional: { fill: p.ink, fillOpacity: 0.02, stroke: p.ink, strokeOpacity: 0.20, width: 1, dash: '4,3' },
+    security: { fill: p.accent, fillOpacity: 0.05, stroke: p.accent, strokeOpacity: 0.50, width: 1, dash: '4,4' },
+  }
+}
+
+/**
  * The three arrow markers every diagram needs.
  *
  * Ids are `arrow`, `arrow-accent`, `arrow-link` — the reference templates use
  * these names, so a diagram assembled by hand from the type docs still matches.
+ *
+ * `skin` defaults to light, which keeps the output byte-identical to what this
+ * function always produced.
  */
-function markerDefs() {
+function markerDefs(skin = 'light') {
+  const p = paletteFor(skin)
   return [
     '    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">',
-    '      <polygon points="0 0, 8 3, 0 6" fill="#4f5d75"/>',
+    `      <polygon points="0 0, 8 3, 0 6" fill="${p.muted}"/>`,
     '    </marker>',
     '    <marker id="arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">',
-    '      <polygon points="0 0, 8 3, 0 6" fill="#bf4520"/>',
+    `      <polygon points="0 0, 8 3, 0 6" fill="${p.accent}"/>`,
     '    </marker>',
     '    <marker id="arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">',
-    '      <polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/>',
+    `      <polygon points="0 0, 8 3, 0 6" fill="${p.link}"/>`,
     '    </marker>',
   ].join('\n')
 }
@@ -65,24 +111,24 @@ function markerDefs() {
  * The mask is not decoration — it is what lets a connector pass behind the box
  * without bleeding through, and drawing it is the single most commonly skipped
  * step in hand-authored diagrams.
+ *
+ * `skin` is threaded all the way down: the mask, the box, the tag frame, the
+ * tag text, the name and the sublabel all come from the skin's palette. Before,
+ * every one of those was a hardcoded light hex, so a dark document got white
+ * boxes and dark-on-dark text.
  */
-export function node({ x, y, w, h, name, sublabel, tag, treatment = 'backend', id }) {
+export function node({ x, y, w, h, name, sublabel, tag, treatment = 'backend', id, skin = 'light' }) {
   const boxId = id ?? slugify(name)
-  const fills = {
-    focal: { fill: 'rgba(191,69,32,0.08)', stroke: '#bf4520', width: 1.2 },
-    backend: { fill: '#ffffff', stroke: '#2d3142', width: 1 },
-    store: { fill: 'rgba(45,49,66,0.05)', stroke: '#4f5d75', width: 1 },
-    external: { fill: 'rgba(45,49,66,0.03)', stroke: 'rgba(45,49,66,0.30)', width: 1 },
-    input: { fill: 'rgba(79,93,117,0.10)', stroke: '#5a6580', width: 1 },
-    optional: { fill: 'rgba(45,49,66,0.02)', stroke: 'rgba(45,49,66,0.20)', width: 1, dash: '4,3' },
-    security: { fill: 'rgba(191,69,32,0.05)', stroke: 'rgba(191,69,32,0.50)', width: 1, dash: '4,4' },
-  }[treatment] ?? { fill: '#ffffff', stroke: '#2d3142', width: 1 }
+  const p = paletteFor(skin)
+  const fills = treatments(skin)[treatment] ?? { fill: p.paper, stroke: p.ink, width: 1 }
 
   const dash = fills.dash === undefined ? '' : ` stroke-dasharray="${fills.dash}"`
+  const fillOpacity = fills.fillOpacity === undefined ? '' : ` fill-opacity="${fills.fillOpacity}"`
+  const strokeOpacity = fills.strokeOpacity === undefined ? '' : ` stroke-opacity="${fills.strokeOpacity}"`
   const lines = [
     `    <!-- node: ${xml(name)} -->`,
-    `    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#f5f5f5"/>`,
-    `    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${fills.fill}" stroke="${fills.stroke}" stroke-width="${fills.width}"${dash}/>`,
+    `    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${p.paper}"/>`,
+    `    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="${fills.fill}"${fillOpacity} stroke="${fills.stroke}"${strokeOpacity} stroke-width="${fills.width}"${dash}/>`,
   ]
   if (typeof tag === 'string' && tag.length > 0) {
     // Tag width and its x/y must land on the 4px grid — the same rule that
@@ -90,15 +136,15 @@ export function node({ x, y, w, h, name, sublabel, tag, treatment = 'backend', i
     // check the tool itself runs.
     const tagWidth = Math.ceil((Math.max(28, tag.length * 6 + 12)) / 4) * 4
     lines.push(
-      `    <rect x="${x + 8}" y="${y + 8}" width="${tagWidth}" height="16" rx="2" fill="none" stroke="rgba(45,49,66,0.30)" stroke-width="0.8"/>`,
-      `    <text x="${x + 12}" y="${y + 20}" font-family="'Geist Mono', ui-monospace, monospace" font-size="8" font-weight="500" letter-spacing="0.18em" fill="#5a6580">${xml(tag.toUpperCase())}</text>`,
+      `    <rect x="${x + 8}" y="${y + 8}" width="${tagWidth}" height="16" rx="2" fill="none" stroke="${p.ink}" stroke-opacity="0.30" stroke-width="0.8"/>`,
+      `    <text x="${x + 12}" y="${y + 20}" font-family="'Geist Mono', ui-monospace, monospace" font-size="8" font-weight="500" letter-spacing="0.18em" fill="${p.soft}">${xml(tag.toUpperCase())}</text>`,
     )
   }
   lines.push(
-    `    <text x="${x + 12}" y="${y + h / 2 + (sublabel === undefined ? 4 : -2)}" font-family="'Geist', system-ui, sans-serif" font-size="12" font-weight="600" fill="#2d3142">${xml(name)}</text>`,
+    `    <text x="${x + 12}" y="${y + h / 2 + (sublabel === undefined ? 4 : -2)}" font-family="'Geist', system-ui, sans-serif" font-size="12" font-weight="600" fill="${p.ink}">${xml(name)}</text>`,
   )
   if (typeof sublabel === 'string' && sublabel.length > 0) {
-    lines.push(`    <text x="${x + 12}" y="${y + h / 2 + 14}" font-family="'Geist Mono', ui-monospace, monospace" font-size="9" fill="#5a6580">${xml(sublabel)}</text>`)
+    lines.push(`    <text x="${x + 12}" y="${y + h / 2 + 14}" font-family="'Geist Mono', ui-monospace, monospace" font-size="9" fill="${p.soft}">${xml(sublabel)}</text>`)
   }
   void boxId
   return lines.join('\n')
@@ -111,10 +157,11 @@ export function node({ x, y, w, h, name, sublabel, tag, treatment = 'backend', i
  * diagonal is the most common breach. Emitting the elbow as a path is the whole
  * reason this helper exists.
  */
-export function elbow({ from, to, r = 8, kind = 'arrow', dashed = false, label }) {
+export function elbow({ from, to, r = 8, kind = 'arrow', dashed = false, label, skin = 'light' }) {
   const [x1, y1] = from
   const [x2, y2] = to
-  const stroke = kind === 'accent' ? '#bf4520' : kind === 'link' ? '#2e5aa8' : '#4f5d75'
+  const p = paletteFor(skin)
+  const stroke = kind === 'accent' ? p.accent : kind === 'link' ? p.link : p.muted
   const marker = `url(#${kind === 'accent' ? 'arrow-accent' : kind === 'link' ? 'arrow-link' : 'arrow'})`
   const dash = dashed ? ' stroke-dasharray="5,4"' : ''
 
@@ -139,33 +186,34 @@ export function elbow({ from, to, r = 8, kind = 'arrow', dashed = false, label }
       : Math.round(y1 / 4) * 4
     const w = Math.ceil(Math.max(24, label.length * 5 + 12) / 4) * 4
     out.push(
-      `    <rect x="${Math.round((lx - w / 2) / 4) * 4}" y="${Math.round((ly - 16) / 4) * 4}" width="${w}" height="16" fill="#f5f5f5"/>`,
-      `    <text x="${lx}" y="${Math.round((ly - 4) / 4) * 4}" font-family="'Geist Mono', ui-monospace, monospace" font-size="8" letter-spacing="0.06em" fill="#4f5d75" text-anchor="middle">${xml(label)}</text>`,
+      `    <rect class="label-mask" x="${Math.round((lx - w / 2) / 4) * 4}" y="${Math.round((ly - 16) / 4) * 4}" width="${w}" height="16" fill="${p.paper}"/>`,
+      `    <text class="arrow-label" x="${lx}" y="${Math.round((ly - 4) / 4) * 4}" font-family="'Geist Mono', ui-monospace, monospace" font-size="8" letter-spacing="0.06em" fill="${p.muted}" text-anchor="middle">${xml(label)}</text>`,
     )
   }
   return out.join('\n')
 }
 
 /** The legend strip. A horizontal bottom strip, never floating inside the art. */
-export function legend(entries, viewBoxWidth, viewBoxHeight) {
+export function legend(entries, viewBoxWidth, viewBoxHeight, skin = 'light') {
   // The tool schema marks `label` required, but a JS function must not crash on
   // a caller that skipped it: one missing legend entry should never take down
   // the whole document. A non-array yields no legend at all.
   if (!Array.isArray(entries) || entries.length === 0) return ''
   const usable = entries.filter((entry) => entry !== null && typeof entry === 'object')
   if (usable.length === 0) return ''
+  const p = paletteFor(skin)
   // The legend owns the bottom 60px; nothing else lives there.
   const y = viewBoxHeight - 40
   const parts = [
     '    <!-- legend: horizontal bottom strip (never floating inside the diagram area) -->',
-    `    <line x1="40" y1="${y - 12}" x2="${viewBoxWidth - 40}" y2="${y - 12}" stroke="rgba(45,49,66,0.12)" stroke-width="1"/>`,
+    `    <line x1="40" y1="${y - 12}" x2="${viewBoxWidth - 40}" y2="${y - 12}" stroke="var(--color-rule)" stroke-width="1"/>`,
   ]
   let x = 40
   for (const entry of usable) {
     const label = typeof entry.label === 'string' ? entry.label : ''
     parts.push(
-      `    <rect x="${x}" y="${y - 4}" width="16" height="16" rx="2" fill="${entry.fill ?? '#ffffff'}" stroke="${entry.stroke ?? '#2d3142'}" stroke-width="1"${entry.dash === undefined ? '' : ` stroke-dasharray="${entry.dash}"`}/>`,
-      `    <text x="${x + 24}" y="${y + 8}" font-family="'Geist Mono', ui-monospace, monospace" font-size="8" letter-spacing="0.06em" fill="#4f5d75">${xml(label)}</text>`,
+      `    <rect x="${x}" y="${y - 4}" width="16" height="16" rx="2" fill="${entry.fill ?? p.paper2}" stroke="${entry.stroke ?? p.ink}" stroke-width="1"${entry.dash === undefined ? '' : ` stroke-dasharray="${entry.dash}"`}/>`,
+      `    <text x="${x + 24}" y="${y + 8}" font-family="'Geist Mono', ui-monospace, monospace" font-size="8" letter-spacing="0.06em" fill="${p.muted}">${xml(label)}</text>`,
     )
     // Advance on the 4px grid so the next swatch is itself compliant.
     x += 24 + Math.ceil((label.length * 5.2) / 4) * 4 + 24
@@ -201,7 +249,6 @@ export function scaffold(spec) {
   const preset = sizeById(size)
   const ramp = rampFor(size)
   const slug = slugify(title)
-  const dark = skin === 'dark'
 
   // `fit` derives its frame from content; without content there is nothing to
   // derive from, so fall back to the default frame and say so in a comment.
@@ -209,17 +256,17 @@ export function scaffold(spec) {
   const [vbW, vbH] = viewBox.split(/\s+/).slice(2).map(Number)
   const minWidth = preset.minWidth ?? vbW
 
-  const paper = dark ? '#2d3142' : '#f5f5f5'
-  const ink = dark ? '#f5f5f5' : '#2d3142'
-  const muted = dark ? '#bfc0c0' : '#4f5d75'
-  const soft = dark ? '#949eb2' : '#5a6580'
+  const paper = 'var(--color-paper)'
+  const ink = 'var(--color-ink)'
+  const muted = 'var(--color-muted)'
+  const soft = 'var(--color-soft)'
 
   const fontLink = fonts === 'web' ? `\n  <link href="${FONT_LINK}" rel="stylesheet">` : ''
   const fontNote = fonts === 'web'
     ? ''
     : '\n  <!-- font source: system — no network request; each stack ends in a generic family -->'
 
-  const legendSvg = legend(legendEntries, vbW, vbH)
+  const legendSvg = legend(legendEntries, vbW, vbH, skin)
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -228,7 +275,7 @@ export function scaffold(spec) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${xml(title)}</title>${fontLink}${fontNote}
   <style>
-    ${diagramCss(minWidth, ramp)}
+    ${diagramCss(minWidth, ramp, skin)}
   </style>
 </head>
 <body>
@@ -241,7 +288,7 @@ export function scaffold(spec) {
         <title id="${slug}-title">${xml(title)}</title>
         <desc id="${slug}-desc">${xml(desc)}</desc>
         <defs>
-${markerDefs()}
+${markerDefs(skin)}
         </defs>
 
         <rect width="100%" height="100%" fill="${paper}"/>
