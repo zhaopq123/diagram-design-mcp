@@ -151,3 +151,39 @@ test('BUG-3 accent 用得少 → 两种皮肤都不该报', () => {
       `${skin} 皮肤下 1 处 accent 不应触发预算告警`)
   }
 })
+
+// ── BUG-6: fitViewBox must actually be called ───────────────────────────────
+
+test('BUG-6 size=fit 给了内容宽高 → viewBox 按内容推导', () => {
+  const html = doc('', { size: 'fit', contentWidth: 400, contentHeight: 300 })
+  // fitViewBox rounds up to 4, adds 40px each side + 60px bottom legend
+  // 400 → 400 (already divisible by 4) + 80 = 480
+  // 300 → 300 + 80 + 60 = 440
+  assert.match(html, /viewBox="0 0 480 440"/,
+    'fit 预设给了 contentWidth=400 contentHeight=300，viewBox 应为 0 0 480 440')
+  // min-width should equal the derived width, not a preset default
+  assert.match(html, /min-width:\s*480px/, 'min-width 应等于推导出的 viewBox 宽度 480px')
+})
+
+test('BUG-6 size=fit 没给内容宽高 → 回退到默认画框', () => {
+  const html = doc('', { size: 'fit' })
+  // Without content dimensions, fit falls back to doc-inline's frame
+  assert.match(html, /viewBox="0 0 960 600"/,
+    'fit 预设没给内容宽高，应回退到 0 0 960 600')
+  assert.match(html, /min-width:\s*960px/, '回退时 min-width 应为 960px')
+})
+
+test('BUG-6 fit 推导出的画框仍须通过机械自检', () => {
+  const body = [
+    node({ x: 40, y: 40, w: 160, h: 48, name: '甲', treatment: 'backend' }),
+    node({ x: 240, y: 40, w: 160, h: 48, name: '乙', treatment: 'focal' }),
+    elbow({ from: [200, 64], to: [240, 64] }),
+  ].join('\n')
+  const html = scaffold({
+    title: 'fit 探针', desc: '测试 fit 预设的自检通过性',
+    size: 'fit', contentWidth: 400, contentHeight: 100, body,
+  })
+  const report = checkDiagram(html)
+  assert.equal(report.errors, 0,
+    report.findings.filter((f) => f.level === 'error').map((f) => f.message).join('；'))
+})

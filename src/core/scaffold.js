@@ -18,7 +18,7 @@
  */
 
 import { FONT_LINK } from './tokens.js'
-import { diagramCss, rampFor, sizeById } from './sizes.js'
+import { diagramCss, fitViewBox, rampFor, sizeById } from './sizes.js'
 
 /** Escape text for XML character-data. */
 function xml(text) {
@@ -86,11 +86,9 @@ function treatments() {
  * Ids are `arrow`, `arrow-accent`, `arrow-link` — the reference templates use
  * these names, so a diagram assembled by hand from the type docs still matches.
  *
- * `skin` defaults to light, which keeps the output byte-identical to what this
- * function always produced.
  */
-function markerDefs(skin = 'light') {
-  const p = paletteFor(skin)
+function markerDefs() {
+  const p = paletteFor()
   return [
     '    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">',
     `      <polygon points="0 0, 8 3, 0 6" fill="${p.muted}"/>`,
@@ -117,10 +115,10 @@ function markerDefs(skin = 'light') {
  * every one of those was a hardcoded light hex, so a dark document got white
  * boxes and dark-on-dark text.
  */
-export function node({ x, y, w, h, name, sublabel, tag, treatment = 'backend', id, skin = 'light' }) {
+export function node({ x, y, w, h, name, sublabel, tag, treatment = 'backend', id }) {
   const boxId = id ?? slugify(name)
-  const p = paletteFor(skin)
-  const fills = treatments(skin)[treatment] ?? { fill: p.paper, stroke: p.ink, width: 1 }
+  const p = paletteFor()
+  const fills = treatments()[treatment] ?? { fill: p.paper, stroke: p.ink, width: 1 }
 
   const dash = fills.dash === undefined ? '' : ` stroke-dasharray="${fills.dash}"`
   const fillOpacity = fills.fillOpacity === undefined ? '' : ` fill-opacity="${fills.fillOpacity}"`
@@ -157,10 +155,10 @@ export function node({ x, y, w, h, name, sublabel, tag, treatment = 'backend', i
  * diagonal is the most common breach. Emitting the elbow as a path is the whole
  * reason this helper exists.
  */
-export function elbow({ from, to, r = 8, kind = 'arrow', dashed = false, label, skin = 'light' }) {
+export function elbow({ from, to, r = 8, kind = 'arrow', dashed = false, label }) {
   const [x1, y1] = from
   const [x2, y2] = to
-  const p = paletteFor(skin)
+  const p = paletteFor()
   const stroke = kind === 'accent' ? p.accent : kind === 'link' ? p.link : p.muted
   const marker = `url(#${kind === 'accent' ? 'arrow-accent' : kind === 'link' ? 'arrow-link' : 'arrow'})`
   const dash = dashed ? ' stroke-dasharray="5,4"' : ''
@@ -194,14 +192,14 @@ export function elbow({ from, to, r = 8, kind = 'arrow', dashed = false, label, 
 }
 
 /** The legend strip. A horizontal bottom strip, never floating inside the art. */
-export function legend(entries, viewBoxWidth, viewBoxHeight, skin = 'light') {
+export function legend(entries, viewBoxWidth, viewBoxHeight) {
   // The tool schema marks `label` required, but a JS function must not crash on
   // a caller that skipped it: one missing legend entry should never take down
   // the whole document. A non-array yields no legend at all.
   if (!Array.isArray(entries) || entries.length === 0) return ''
   const usable = entries.filter((entry) => entry !== null && typeof entry === 'object')
   if (usable.length === 0) return ''
-  const p = paletteFor(skin)
+  const p = paletteFor()
   // The legend owns the bottom 60px; nothing else lives there.
   const y = viewBoxHeight - 40
   const parts = [
@@ -233,6 +231,8 @@ export function legend(entries, viewBoxWidth, viewBoxHeight, skin = 'light') {
  * @param {string} [spec.fonts] - `web` (Google Fonts link) or `system` (offline).
  * @param {string} [spec.body] - the SVG body between background and legend.
  * @param {Array} [spec.legend] - legend entries.
+ * @param {number} [spec.contentWidth] - `fit` only: the content bounding-box width.
+ * @param {number} [spec.contentHeight] - `fit` only: the content bounding-box height.
  */
 export function scaffold(spec) {
   const {
@@ -244,17 +244,26 @@ export function scaffold(spec) {
     fonts = 'web',
     body = '',
     legend: legendEntries = [],
+    contentWidth,
+    contentHeight,
   } = spec
 
   const preset = sizeById(size)
   const ramp = rampFor(size)
   const slug = slugify(title)
 
-  // `fit` derives its frame from content; without content there is nothing to
-  // derive from, so fall back to the default frame and say so in a comment.
-  const viewBox = preset.viewBox ?? '0 0 960 600'
+  // `fit` derives its frame from the caller's content bounding box. Without
+  // those numbers there is nothing to derive from, so it falls back to the
+  // default frame — and the tool layer says so out loud, rather than quietly
+  // shipping a "fit" diagram that is actually doc-inline.
+  const fitResolved = preset.id === 'fit'
+    && Number.isFinite(contentWidth) && contentWidth > 0
+    && Number.isFinite(contentHeight) && contentHeight > 0
+  const viewBox = fitResolved ? fitViewBox(contentWidth, contentHeight) : (preset.viewBox ?? '0 0 960 600')
   const [vbW, vbH] = viewBox.split(/\s+/).slice(2).map(Number)
-  const minWidth = preset.minWidth ?? vbW
+  // The hosting contract pins `min-width` to the viewBox width; `fit` has no
+  // preset value of its own, so the derived width IS the value.
+  const minWidth = fitResolved ? vbW : (preset.minWidth ?? vbW)
 
   const paper = 'var(--color-paper)'
   const ink = 'var(--color-ink)'
@@ -266,7 +275,7 @@ export function scaffold(spec) {
     ? ''
     : '\n  <!-- font source: system — no network request; each stack ends in a generic family -->'
 
-  const legendSvg = legend(legendEntries, vbW, vbH, skin)
+  const legendSvg = legend(legendEntries, vbW, vbH)
 
   return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -288,7 +297,7 @@ export function scaffold(spec) {
         <title id="${slug}-title">${xml(title)}</title>
         <desc id="${slug}-desc">${xml(desc)}</desc>
         <defs>
-${markerDefs(skin)}
+${markerDefs()}
         </defs>
 
         <rect width="100%" height="100%" fill="${paper}"/>
@@ -303,10 +312,4 @@ ${legendSvg}
 </body>
 </html>
 `
-}
-
-/** Export the skin's resolved colours for the scaffold's callers. */
-export const SKIN = {
-  light: { paper: '#f5f5f5', ink: '#2d3142', muted: '#4f5d75', soft: '#5a6580', accent: '#bf4520', link: '#2e5aa8' },
-  dark: { paper: '#2d3142', ink: '#f5f5f5', muted: '#bfc0c0', soft: '#949eb2', accent: '#f08a59', link: '#739fdf' },
 }
