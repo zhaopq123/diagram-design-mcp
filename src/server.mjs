@@ -20,9 +20,13 @@ import { Server } from '@modelcontextprotocol/sdk/server/index.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { CallToolRequestSchema, ListToolsRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 import { TOOLS } from './tools.js'
+import manifest from '../package.json' with { type: 'json' }
 
-const NAME = 'workbuddy-diagram-design'
-const VERSION = '1.0.0'
+const NAME = manifest.name
+// Hand-copied once and drifted to 1.0.0 while the manifest said 1.1.0 — the
+// version the client sees in `initialize` and `/health` now comes from the
+// manifest, so a release bump cannot be forgotten here again.
+const VERSION = manifest.version
 
 /** Refuse anything bigger than this. A gallery payload is the largest thing we expect. */
 const MAX_BODY_BYTES = 8 * 1024 * 1024

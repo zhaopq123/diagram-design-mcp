@@ -12,6 +12,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
@@ -65,8 +66,17 @@ test('端到端：真实 MCP 客户端能完成握手、列工具、调工具', 
   await client.connect(transport)
   assert.ok(typeof transport.sessionId === 'string' && transport.sessionId.length > 0, '服务端没有下发 session id')
 
+  // What a client actually sees about us. `VERSION` was a hand-copied string and
+  // sat at 1.0.0 while package.json said 1.1.0, so pin both surfaces to the manifest.
+  const manifest = JSON.parse(await readFile(join(ROOT, 'package.json'), 'utf8'))
+  assert.equal(client.getServerVersion()?.version, manifest.version, 'initialize 自报版本与 package.json 不一致')
+  const health = await fetch(`${BASE}/health`).then((response) => response.json())
+  assert.equal(health.version, manifest.version, '/health 版本与 package.json 不一致')
+  assert.equal(health.name, manifest.name, '/health 名字与 package.json 不一致')
+
   const { tools } = await client.listTools()
-  assert.equal(tools.length, 7)
+  assert.equal(tools.length, health.tools, '/health 报的工具数和 tools/list 不一致')
+  assert.equal(tools.length, 8)
 
   // The raw wire schema is what a strict upstream model actually sees — assert
   // on it, not on our local object, so the transport cannot rewrite anything in.

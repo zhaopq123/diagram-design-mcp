@@ -61,7 +61,7 @@ async function main() {
   section('HTTP 层')
   const health = await fetch(URL_.replace(/\/mcp$/, '/health')).then((r) => r.json())
   ok('/health 可达且 ok=true', health.ok === true, JSON.stringify(health))
-  ok('/health 报 7 个工具', health.tools === 7, `tools=${health.tools}`)
+  ok('/health 报 8 个工具', health.tools === 8, `tools=${health.tools}`)
 
   const unauth = await fetch(URL_, {
     method: 'POST',
@@ -87,9 +87,9 @@ async function main() {
 
   section('工具清单契约（严格模型要求）')
   const { tools } = await client.listTools()
-  ok('恰好 7 个工具', tools.length === 7, `count=${tools.length}`)
+  ok('恰好 8 个工具', tools.length === 8, `count=${tools.length}`)
   const names = tools.map((t) => t.name).sort()
-  const expected = ['diagram_check', 'diagram_gallery', 'diagram_import', 'diagram_scaffold', 'diagram_sizes', 'diagram_tokens', 'diagram_types']
+  const expected = ['diagram_check', 'diagram_gallery', 'diagram_icons', 'diagram_import', 'diagram_scaffold', 'diagram_sizes', 'diagram_tokens', 'diagram_types']
   ok('工具名齐全', JSON.stringify(names) === JSON.stringify(expected), names.join(','))
 
   for (const tool of tools) {
@@ -115,6 +115,22 @@ async function main() {
   const sizes = await client.callTool({ name: 'diagram_sizes', arguments: {} })
   const sizesText = textOf(sizes)
   ok('diagram_sizes 返回预设', sizesText.includes('doc-inline') && sizesText.includes('安全区'))
+
+  const iconIndex = await client.callTool({ name: 'diagram_icons', arguments: {} })
+  const iconIndexText = textOf(iconIndex)
+  ok('diagram_icons 索引不含内联标记', iconIndexText.includes('图标库索引') && !iconIndexText.includes('```svg'), iconIndexText.split('\n')[0])
+  ok('diagram_icons 索引比标记便宜', iconIndexText.length < 8000, `len=${iconIndexText.length}`)
+
+  const iconMarkup = await client.callTool({ name: 'diagram_icons', arguments: { names: ['database', 'firewall'] } })
+  const iconMarkupText = textOf(iconMarkup)
+  ok('diagram_icons 按名取到可嵌标记', iconMarkupText.includes('<svg') && iconMarkupText.includes('</svg>'))
+  ok('diagram_icons 标记带来源与许可证', /MIT|CC0/.test(iconMarkupText))
+
+  const iconZh = await client.callTool({ name: 'diagram_icons', arguments: { query: '数据库' } })
+  ok('diagram_icons 中文别名可检索', textOf(iconZh).includes('`database`'), textOf(iconZh).split('\n')[0])
+
+  const iconMiss = await client.callTool({ name: 'diagram_icons', arguments: { names: ['mail'] } })
+  ok('diagram_icons 不编造缺失图标', textOf(iconMiss).includes('未找到'), textOf(iconMiss).slice(0, 120))
 
   const typesAll = await client.callTool({ name: 'diagram_types', arguments: {} })
   ok('diagram_types 全量目录', textOf(typesAll).includes('45'))

@@ -1,8 +1,10 @@
 # workbuddy-diagram-design
 
+<img src="./icon.svg" width="64" height="64" alt="workbuddy-diagram-design 图标：两个节点经折线汇入一个焦点节点" align="left">
+
 把架构图、流程图、时序图、状态机、象限图等 **45 类图表**画成自足单文件 HTML+SVG 的编辑级设计系统，以 **MCP 服务**的形式提供。
 
-一个 7 工具的 MCP 服务器：查设计规范、搭合规骨架、跑机械自检、从既有图提取结构、合成图库页。
+一个 8 工具的 MCP 服务器：查设计规范、取图标、搭合规骨架、跑机械自检、从既有图提取结构、合成图库页。
 
 ## 为什么是 MCP
 
@@ -29,10 +31,21 @@
 | `diagram_tokens` | 取权威设计数值：语义角色（明/暗）、节点处理、排版、描边/圆角/网格、复杂度预算、六条连线铁律、反模式 |
 | `diagram_sizes` | 取尺寸预设（viewBox 与字号绑定）、排版阶梯、安全区、四个输出旋钮、降级顺序、宿主 CSS 契约 |
 | `diagram_types` | 查 45 类目录：选型指南、语义模式路由、每类的布局约定/预算/反模式。支持中文关键词（「时序」「象限」） |
+| `diagram_icons` | 取内置图标库：82 个单色 24×24 图标 / 12 组，`currentColor` 自动跟皮肤。默认只回便宜的索引，点名 `names` 才回 `<svg>` 标记；中文别名（「数据库」「防火墙」）可直接搜 |
 | `diagram_scaffold` | 生成**落地即合规**的骨架 HTML（无障碍契约、箭头标记、宿主 CSS、图例条、4px 网格都放好了） |
 | `diagram_check` | 机械自检。报告分 `findings`（机械判定，error 必须修）/ `judgement`（编辑判断，是你的责任）/ `limits`（查不出什么） |
 | `diagram_import` | 从 Mermaid / draw.io / Excalidraw **提取结构**（不渲染） |
 | `diagram_gallery` | 把多张图合成自足图库页，内嵌 `iframe sandbox="" srcdoc` 隔离预览 + 自检结论 |
+
+## 图标库为什么是内置数据
+
+服务端读不到调用方的文件系统，所以图标不能照上游那样写成 `references/primitive-icons.md` 让 agent 去 `Read`——那条路在 MCP 形态下是死的（本包实际部署在一台安卓手机上）。82 个图标因此被机械解析进 `src/core/icons.json`，由 `diagram_icons` 把 `<svg>` 标记直接发回去。再生成：
+
+```bash
+npm run icons -- /path/to/cathrynlavery/diagram-design/skills/diagram-design/references/primitive-icons.md
+```
+
+**只收许可证允许再分发的来源**：Tabler Icons（MIT）、Simple Icons（CC0）、Devicon（MIT）、log-z/logos（MIT）。上游自己标着 `verify license before use` 的 5 个（`hop` / `pentaho` / `dagster` / `sas` / `stata`）**没有收录**——未确权的图形不能借本包的 MIT 名义分发，`icons.json` 的 `excluded` 字段记着每一条的原因，测试也钉着这个白名单。
 
 ## 跑起来
 
@@ -107,7 +120,7 @@ npm test        # 单元：核心模块 + 工具契约 + HTTP 端到端 + 会话
 
 `test/cli-contract.test.mjs` 守两件事：三个远端脚本**缺 `DIAGRAM_MCP_URL` 必须 exit 2 并点名该变量**（不能把"忘配地址"伪装成网络错误），以及**仓库里不许出现内网地址**。它靠 `spawnSync` 拉起子进程——在禁 spawn 的沙箱里会显式 skip 并说明原因，不会假通过。
 
-对**已部署实例**跑端到端冒烟（真实 MCP 客户端、握手、鉴权、7 工具全打一遍、并发会话）：
+对**已部署实例**跑端到端冒烟（真实 MCP 客户端、握手、鉴权、8 工具全打一遍、并发会话）：
 
 ```bash
 DIAGRAM_MCP_URL=http://<host>:8400/mcp \
@@ -172,9 +185,10 @@ node scripts/build-examples.mjs
 ## 目录
 
 ```
+icon.svg            仓库/包图标（用本包自己的令牌画的：paper 底 + ink 线 + accent 焦点，圆角 8 = radius-lg）
 src/
   server.mjs        Streamable HTTP + 会话生命周期 + Bearer 鉴权
-  tools.js          7 个工具：纯数据 + 纯 handler
+  tools.js          8 个工具：纯数据 + 纯 handler
   core/
     tokens.js       设计令牌（语义角色、排版、网格、预算、连线铁律）
     sizes.js        尺寸预设、排版阶梯、安全区、旋钮、降级顺序
@@ -182,8 +196,9 @@ src/
     scaffold.js     合规骨架生成器
     import.js       Mermaid / draw.io / Excalidraw 解析器
     catalog.json    45 类图表目录
-test/               43 项（含 CLI 契约，2 项在禁 spawn 的环境下 skip）
-scripts/            smoke-remote.mjs（60 项端到端）· audit.mjs（78 项边界审计）· build-examples.mjs
+    icons.json      82 个图标（名字、说明、中文别名、`<svg>` 标记、来源与许可）
+test/               68 项（含 CLI 契约与图标库门禁，2 项在禁 spawn 的环境下 skip）
+scripts/            smoke-remote.mjs · audit.mjs · build-examples.mjs · build-icons.mjs（再生成 icons.json）
 examples/           两张真图 + 图库页
 deploy/             run.sh + Termux 守护脚本
 skill/              WorkBuddy Skill 入口

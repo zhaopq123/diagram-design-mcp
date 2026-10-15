@@ -38,12 +38,28 @@ workbuddy-diagram-design       (MIT, 本包)
 
 把插件的能力迁移成 **WorkBuddy 专用的 MCP 服务**，并做以下改动：
 
-- **传输层换成 MCP Streamable HTTP**，7 个工具对任何 MCP 客户端可用，不再绑定单一宿主。
+- **传输层换成 MCP Streamable HTTP**，工具对任何 MCP 客户端可用，不再绑定单一宿主。
 - **工具 schema 重写为扁平结构**：去掉 `outputSchema`、`anyOf`、`oneOf`、`allOf`、`$ref`。严格上游模型会因为这些字段直接拒掉整个请求，工具静默不可用。`test/tools.test.mjs` 把这个约束锁死了。
 - **内容进、内容出**：服务端不读写调用方文件系统，路径穿越风险归零，服务可以跑在完全不同的机器上（本包实际部署在手机上）。
+- **文档指针改成工具数据**：上游 `references/*.md` 靠宿主 `Read` 加载，远程 MCP 客户端读不到，因此规范、尺寸、类型目录、图标库分别由 `diagram_tokens` / `diagram_sizes` / `diagram_types` / `diagram_icons` 直接发内容；`catalog.json` 只保留 `upstreamDoc` 作溯源，不分发那些 `.md`。
 - **新增 `diagram_gallery`**：DSH 版侧边栏图库面板在 WorkBuddy 下的等价物——自足 HTML 页，`iframe sandbox="" srcdoc` 隔离预览。
 - **修复上游解析器 bug**：Mermaid `S-->>C` 被解析出幽灵节点 `S-`（id 正则尾部允许 `-`，吞掉了箭头首划）。
 - **解析器从 Host 半边抽出**为 `src/core/import.js`，脱离宿主可独立测试。
+
+## 图标库（`src/core/icons.json`）
+
+`diagram_icons` 发的 82 个图标来自上游 `primitive-icons.md`，按**来源库许可证**收录：
+
+| 来源库 | 许可 | 数量 |
+|---|---|---|
+| [Tabler Icons](https://github.com/tabler/tabler-icons) | MIT | 55 |
+| [Simple Icons](https://github.com/simple-icons/simple-icons) | CC0 | 22 |
+| [Devicon](https://github.com/devicons/devicon) | MIT | 2 |
+| [log-z/logos](https://github.com/log-z/logos) | MIT | 3 |
+
+**上游自己标注 `Direct fetch / <host> — verify license before use` 的 5 个图形没有收录**（`hop`、`pentaho`、`dagster`、`sas`、`stata`）：许可证未确认，不能借本包的 MIT 名义再分发。剔除记录保留在 `icons.json` 的 `excluded` 字段里，`test/tools.test.mjs` 断言这个白名单不被绕过。
+
+品牌剪影（AWS / Azure / Docker / Kubernetes 等）各自的商标仍归原权利人，本包仅作图示性使用。
 
 ## 许可
 

@@ -105,7 +105,7 @@ async function main() {
   ok('未知路径 → 404', unknownPath.status === 404, `status=${unknownPath.status}`)
 
   const after = await health()
-  ok('异常请求后服务仍健康', after.ok === true && after.tools === 7, JSON.stringify(after))
+  ok('异常请求后服务仍健康', after.ok === true && after.tools === 8, JSON.stringify(after))
 
   section('鉴权')
   for (const [label, header] of [

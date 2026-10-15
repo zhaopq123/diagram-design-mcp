@@ -1,5 +1,6 @@
 {
   "generatedFrom": "cathrynlavery/diagram-design (MIT)",
+  "catalogNote": "upstreamDoc 记录的是上游 cathrynlavery/diagram-design 里的文档路径，仅用于溯源与再生成；本包不分发这些 .md 文件。给 agent 看的规范已全部内联在 layout / budget / antiPatterns 字段里，需要具体数值取 diagram_tokens / diagram_sizes / diagram_icons。",
   "typeCount": 45,
   "guide": [
     {
@@ -235,7 +236,7 @@
           "重构对比"
         ]
       },
-      "reference": "references/type-architecture-delta.md",
+      "upstreamDoc": "references/type-architecture-delta.md",
       "layout": [
         "Three panels, one reading order: Before · Changes · After. Both topology panels use the same width, height, and internal grid pitch. The center panel is a short change ledger, not a third topology. Name the two snapshots with meaningful versions or dates.",
         "Keep the mental map stable. Start by copying the Before coordinates into After. Move a retained component only when its movement is part of the story and receives a MOVED entry. Do not independently run a layout algorithm on each panel.",
@@ -297,7 +298,7 @@
           "组件图"
         ]
       },
-      "reference": "references/type-architecture.md",
+      "upstreamDoc": "references/type-architecture.md",
       "layout": [
         "Group components by tier or trust boundary (frontend → backend → data; public → private).",
         "Primary flow runs left→right or top→down. Pick one and hold it.",
@@ -334,11 +335,11 @@
           "户型"
         ]
       },
-      "reference": "references/type-axonometric-plan.md",
+      "upstreamDoc": "references/type-axonometric-plan.md",
       "layout": [
         "Plate: One floor slab (6 units) or one site (8 units, small corner radius). Everything stands on it, and nothing extends past its edge.",
         "Walls: 6 units thick and cut at desk height, about 22 units, so no wall hides a room. Doors are gaps in a wall. Walls meet without overlapping: run one wall through a junction and stop the other at its face.",
-        "Furniture and buildings: Boxes on the plate with the house face shading (type-exploded.md § Faces and lines). Heights are to scale with each other. Two footprints never overlap.",
+        "Furniture and buildings: Boxes on the plate with the house face shading (`exploded` 的 Faces and lines 一条). Heights are to scale with each other. Two footprints never overlap.",
         "Flat marks: Roads, paths, and floor tints sit on the plate's top face as flat fills (ink at 0.07) with no thickness. A dashed centre line (ink at 0.25, 6,5) may mark a road.",
         "Racks: Tall shelving is a box of kind rack with the house shading, a shelf line every 14 units, and an upright every 30. Run rack rows along x so the reader sees the lit face and the aisles between rows.",
         "Trees: A canopy cylinder 8 units up on a short trunk, canopy top in rule-solid light or soft dark. Trees are planting, so keep them small and off every footprint.",
@@ -390,7 +391,7 @@
           "排名"
         ]
       },
-      "reference": "references/type-bar.md",
+      "upstreamDoc": "references/type-bar.md",
       "layout": [
         "Orientation: Vertical bars (columns) are default. Horizontal bars are appropriate when category labels are long or you have more than 8 categories.",
         "Plot area margins: left 80px (y-axis labels), bottom 60px (x-axis labels), top 40px, right 40px — inside a 0 0 1000 500 viewBox.",
@@ -439,7 +440,7 @@
           "数据流向"
         ]
       },
-      "reference": "references/type-data-flow.md",
+      "upstreamDoc": "references/type-data-flow.md",
       "layout": [
         "lanes[k].key — the 3-letter role chip text (e.g., ADM, ENG, SCI, CON). Used inside every node in that lane.",
         "lanes[k].name — two-line lane label; both lines use the uppercase eyebrow role.",
@@ -534,7 +535,7 @@
           "索引"
         ]
       },
-      "reference": "references/type-db-schema.md",
+      "upstreamDoc": "references/type-db-schema.md",
       "layout": [
         "Header band — schema.table (e.g. public.orders) in the node-name role, 12px, weight 600, with a rectangular type tag (rx=2, NOT a pill) reading TABLE. A hairline separates it from the body.",
         "Column rows — fixed 24px row height so connectors can anchor predictably. Each row: column name in the node-name family at 12px anchored left, SQL type in the sublabel role 9px muted anchored right (uuid, text, numeric(12,2), timestamptz), and constraint chips between them as small rx=2 tags in the eyebrow role at 8px: PK, FK, UQ, NN. Alternate row background ink @ 0.02 on even rows for scannability.",
@@ -592,12 +593,12 @@
           "循环依赖"
         ]
       },
-      "reference": "references/type-dependency.md",
+      "upstreamDoc": "references/type-dependency.md",
       "layout": [
         "Ranked layers. Nodes sit in horizontal rank rows by dependency depth: rank 0 (entry points nothing depends on) at the top, deeper ranks below. Forward edges point downward across ranks, or run horizontal within a single rank row when a dependency compresses to the same depth as its dependent (e.g. a shallow sibling dependency) — never upward outside the one marked cycle. Rank rows are 120px apart.",
-        "Nodes are the standard node-box pattern (§6, primitives-core.md): rx=6, 160px wide, 56px tall.",
+        "Nodes are the standard node-box pattern (§6 node-box pattern; 数值以 `diagram_tokens` 的 geometry 为准): rx=6, 160px wide, 56px tall.",
         "Fan-in badge. Every node carries an eyebrow-role 8px badge in its top-right corner, inside a small rx=2 box, showing how many nodes depend on it (4 in). A mask fully inside a node is a badge chip, not a label — legitimate under §6 rule 6. The node with the highest fan-in is the diagram's structural story; size nothing else to compete with it.",
-        "Node treatments (style-guide.md § Node type → treatment):",
+        "Node treatments (`diagram_tokens` 的 nodeTreatments 表):",
         "Internal package/service → white fill + ink stroke.",
         "External / third-party → ink @ 0.03 fill + ink @ 0.30 stroke (the External/Cloud treatment).",
         "Leaf with no outgoing edges → ink @ 0.05 fill + muted stroke.",
@@ -661,7 +662,7 @@
     {
       "id": "deployment",
       "title": "Deployment",
-      "bestFor": "where the software actually runs — hosts, VMs, pods, and managed services placed inside environment or network-boundary zones, with replica counts and versioned artifacts called out. Architecture answers \"what talks to what\"; deployment answers \"what is installed on which host, in which environment, behind which network boundary, at how many replicas.\" If the diagram has no physical-placement decision to show — no zone boundary, no replica count, no version that matters — use type-architecture.md instead; redrawing the logical architecture with hostnames bolted on is the most common deployment anti-pattern.",
+      "bestFor": "where the software actually runs — hosts, VMs, pods, and managed services placed inside environment or network-boundary zones, with replica counts and versioned artifacts called out. Architecture answers \"what talks to what\"; deployment answers \"what is installed on which host, in which environment, behind which network boundary, at how many replicas.\" If the diagram has no physical-placement decision to show — no zone boundary, no replica count, no version that matters — use the `architecture` type instead; redrawing the logical architecture with hostnames bolted on is the most common deployment anti-pattern.",
       "zh": {
         "title": "部署",
         "aliases": [
@@ -672,17 +673,17 @@
           "副本"
         ]
       },
-      "reference": "references/type-deployment.md",
+      "upstreamDoc": "references/type-deployment.md",
       "layout": [
-        "Three nesting levels, outermost to innermost — reuses the containment grammar from type-nested.md, specialized for infrastructure:",
-        "1. Zone — an environment or network boundary (edge, prod / eu-west-1, data). A large rect, rx=8, fill ink @ 0.02, stroke ink @ 0.20 dashed 4,4. An eyebrow-role 8px (or 7px for tight layouts) uppercase tracked label sits inside the top-left corner, on a paper-colored mask over the border. Zones are drawn first — before arrows and nodes — so labels and boxes paint over them (z-order: bg → zones → arrows → labels → nodes). 2. Infrastructure node — a host, VM, pod, or managed service inside a zone. The §6 node-box pattern (SKILL.md; markup in primitives-core.md) at rx=6, with a rectangular type tag (rx=2, not a pill) carrying POD / VM / MANAGED / CDN in the top-left corner. 3. Artifact chip — what is deployed onto that node. A small 24px-tall rect rx=4, fill ink @ 0.05, stroke muted, holding the image or service name in the node-name family at 12px (left-aligned) plus a sublabel-role 9px version tag (right-aligned, e.g. v2.4.1). A node can carry more than one chip (stacked with an 8px gap) when more than one artifact is co-located (a sidecar, for example).",
+        "Three nesting levels, outermost to innermost — reuses the containment grammar from the `nested` type, specialized for infrastructure:",
+        "1. Zone — an environment or network boundary (edge, prod / eu-west-1, data). A large rect, rx=8, fill ink @ 0.02, stroke ink @ 0.20 dashed 4,4. An eyebrow-role 8px (or 7px for tight layouts) uppercase tracked label sits inside the top-left corner, on a paper-colored mask over the border. Zones are drawn first — before arrows and nodes — so labels and boxes paint over them (z-order: bg → zones → arrows → labels → nodes). 2. Infrastructure node — a host, VM, pod, or managed service inside a zone. The §6 node-box pattern (SKILL.md; 标记与数值取 `diagram_tokens` 的 geometry 与 nodeTreatments) at rx=6, with a rectangular type tag (rx=2, not a pill) carrying POD / VM / MANAGED / CDN in the top-left corner. 3. Artifact chip — what is deployed onto that node. A small 24px-tall rect rx=4, fill ink @ 0.05, stroke muted, holding the image or service name in the node-name family at 12px (left-aligned) plus a sublabel-role 9px version tag (right-aligned, e.g. v2.4.1). A node can carry more than one chip (stacked with an 8px gap) when more than one artifact is co-located (a sidecar, for example).",
         "Replica badge. A node running N copies carries a right-aligned eyebrow-role 8px badge (x3) inside its own small rx=2 box in the node's top-right corner. A mask fully inside a node is a badge chip and is a legitimate exception to the \"mask must not overlap a later node\" rule (SKILL.md §6 rule 6) — it's part of that same node.",
-        "Network paths. Orthogonal elbows between nodes (SKILL.md §6, elbow formula and port-selection rules in type-architecture.md), labelled with protocol and port in the arrow-label role at 8px (HTTPS:443, TLS:5432). A path that crosses a zone boundary is link-blue; a path that stays inside one zone is muted. Async or replication paths are dashed 5,4.",
+        "Network paths. Orthogonal elbows between nodes (SKILL.md §6, elbow formula and port-selection rules in the `architecture` type), labelled with protocol and port in the arrow-label role at 8px (HTTPS:443, TLS:5432). A path that crosses a zone boundary is link-blue; a path that stays inside one zone is muted. Async or replication paths are dashed 5,4.",
         "Focal rule. The 2 accent elements are the single-point-of-failure or the newly-introduced piece — never more than 2. In the canonical example: the RDS primary (accent-tint fill, accent stroke) and the replication path to its standby (accent, dashed)."
       ],
       "antiPatterns": [
         {
-          "head": "Redrawing the logical architecture with hostnames bolted on. If no placement decision is visible (which host, which zone, how many replicas), use type-architecture.md instead.",
+          "head": "Redrawing the logical architecture with hostnames bolted on. If no placement decision is visible (which host, which zone, how many replicas), use the `architecture` type instead.",
           "body": ""
         },
         {
@@ -745,14 +746,14 @@
           "源到消费者"
         ]
       },
-      "reference": "references/type-dp-integration.md",
+      "upstreamDoc": "references/type-dp-integration.md",
       "layout": [
         "bar — full-zone-width strip. Default height 44 px (focal bars get 56 px). Required fields: name, icon. Optional: subtitle, role, color, focal.",
         "row — N nodes evenly spaced across zone width. Required: nodes list. Each node has name, icon, optional role, subtitle, color, focal.",
         "db → cylinder, sftp → folder-with-arrow, mail → envelope, mainframe → server-with-vents",
         "monitor → desktop screen, chart → bar-chart, globe → globe, api → curly braces",
         "key → key + ring (identity / IDP)",
-        "Any explicit icon name in primitive-icons.md is also accepted."
+        "Any icon name from the built-in icon library works too — call `diagram_icons` for the index, then pass `names` for the markup."
       ],
       "antiPatterns": [
         {
@@ -831,7 +832,7 @@
           "角色权限"
         ]
       },
-      "reference": "references/type-dp-security-matrix.md",
+      "upstreamDoc": "references/type-dp-security-matrix.md",
       "layout": [
         "roles[j].name — primary role label (node-name role at 11px, white text on the ink banner)",
         "roles[j].code — secondary AD-group identifier (sublabel role, white text at 0.85 opacity)",
@@ -891,7 +892,7 @@
           "数据库设计"
         ]
       },
-      "reference": "references/type-er.md",
+      "upstreamDoc": "references/type-er.md",
       "layout": [
         "Each entity is a two-section box:",
         "Header: type tag (ENTITY) + entity name in the node-name role.",
@@ -930,7 +931,7 @@
           "装配"
         ]
       },
-      "reference": "references/type-exploded.md",
+      "upstreamDoc": "references/type-exploded.md",
       "layout": [
         "Parts: 2 to 5, listed bottom to top. Each part is a rounded prism (rect, thickness t) plus at most two levels of detail on its top face, because the top face is the one the reader sees.",
         "Explode axis: Vertical by default. Parts move straight up, nothing rotates, and the bottom part stays at z = 0.",
@@ -997,9 +998,9 @@
           "因果"
         ]
       },
-      "reference": "references/type-fishbone.md",
+      "upstreamDoc": "references/type-fishbone.md",
       "layout": [
-        "Spine. A horizontal line (ink, 1.2px) runs left→right at the vertical centre CY, terminating with an arrowhead into an effect box at the right head — the node-box pattern from SKILL.md §6 (primitives-core.md), the observed-effect statement inside.",
+        "Spine. A horizontal line (ink, 1.2px) runs left→right at the vertical centre CY, terminating with an arrowhead into an effect box at the right head — the node-box pattern from SKILL.md §6 (数值取 `diagram_tokens` 的 geometry), the observed-effect statement inside.",
         "Bones. Category lines are straight diagonals at a fixed 60° to the spine, alternating above and below, evenly spaced along it. Each bone carries its category name at the outer end in a small tag-style box (rx=4, not a pill) — node-name role, 12px, weight 600.",
         "Sub-causes. Short horizontal ticks (32px, soft) branch off each bone at fixed points along its length, each with a sub-cause label in the sublabel role at 9px sitting past the open end of the tick.",
         "Diagonal exemption. SKILL.md §6 rule 1 (mandatory rounded right-angle elbows) does not apply to the 60° bones — they are this type's defining grammar. The exemption covers bones and sub-cause ticks only; any other connector in a fishbone diagram (e.g. a callout leader, a cross-reference arrow) still uses rounded right-angle elbows.",
@@ -1069,7 +1070,7 @@
           "算法"
         ]
       },
-      "reference": "references/type-flowchart.md",
+      "upstreamDoc": "references/type-flowchart.md",
       "layout": [
         "Shape carries type, not color:",
         "Oval (rx=20) — start / end",
@@ -1110,7 +1111,7 @@
           "进度"
         ]
       },
-      "reference": "references/type-gantt.md",
+      "upstreamDoc": "references/type-gantt.md",
       "layout": [
         "Left label column: x=20–200 (180px). Task names in the node-name role at 11px 600. Phase labels as eyebrow 7px above each group.",
         "Timeline area: x=200–960 (760px). Time axis runs left→right.",
@@ -1157,7 +1158,7 @@
           "密度"
         ]
       },
-      "reference": "references/type-heatmap.md",
+      "upstreamDoc": "references/type-heatmap.md",
       "layout": [
         "Plot area: left 160px (row labels), top 64px (column labels), right 40px, bottom 120px (legend area); inside 0 0 1000 500 viewBox.",
         "Cell size: 116px wide × 56px tall, gap 4px. Maximum grid: 6 columns × 5 rows within the viewBox; smaller grids scale the cells up to fill the space.",
@@ -1207,7 +1208,7 @@
           "全景"
         ]
       },
-      "reference": "references/type-high-level.md",
+      "upstreamDoc": "references/type-high-level.md",
       "layout": [
         "node — a standard box inside the cluster (default).",
         "bar — a horizontal strip spanning the cluster top. Typically one (Orchestration); see §5 for the pairing rule.",
@@ -1217,7 +1218,7 @@
         "web → internet",
         "legacy → server",
         "api → api",
-        "Any explicit icon name in primitive-icons.md is also accepted."
+        "Any icon name from the built-in icon library works too — call `diagram_icons` for the index, then pass `names` for the markup."
       ],
       "antiPatterns": [
         {
@@ -1262,7 +1263,7 @@
     {
       "id": "it-state",
       "title": "IT current-state",
-      "bestFor": "documenting the before picture of a modernization proposal — the legacy IT landscape grouped by phase or department (Collection → Processing → Dissemination, or Frontend / Backend / Storage, or Survey → Analysts → Reports), with pain-points flagged, file-based hand-offs labelled (CSV / Excel / Email / Copy), and pre-platform tooling visible. The companion to type-dp-integration.md: this type shows the gap that a data-platform proposal is going to close.",
+      "bestFor": "documenting the before picture of a modernization proposal — the legacy IT landscape grouped by phase or department (Collection → Processing → Dissemination, or Frontend / Backend / Storage, or Survey → Analysts → Reports), with pain-points flagged, file-based hand-offs labelled (CSV / Excel / Email / Copy), and pre-platform tooling visible. The companion to the `dp-integration` type: this type shows the gap that a data-platform proposal is going to close.",
       "zh": {
         "title": "it现状",
         "aliases": [
@@ -1272,14 +1273,14 @@
           "it景观"
         ]
       },
-      "reference": "references/type-it-state.md",
+      "upstreamDoc": "references/type-it-state.md",
       "layout": [
         "orientation — horizontal (zones run L→R, components stack vertically inside each zone) or vertical (zones stack T→B, components run L→R inside each zone).",
         "zones[i].name — uppercase short label (≤ 14 chars). Rendered at the top-left of the zone box in the eyebrow role with letter-spacing 0.14em, on a paper-masked break in the zone border.",
         "components[i][k].id — globally unique slug; referenced by connectors[].from/to.",
         "components[i][k].name — node-name role (the human-readable label).",
         "components[i][k].sub — sublabel role at 10px in muted (the technical sub-label; up to 2 lines via auto-wrap when component height grows to 72).",
-        "components[i][k].icon — any id from references/primitive-icons.md. If missing → no icon, the name shifts left. (Catalog has 41 icons; mail is currently missing — use icon: file as fallback for email hand-offs.)",
+        "components[i][k].icon — any name from the built-in icon library; take the index (and the `<svg>` markup) from `diagram_icons`. If missing → no icon, the name shifts left. (82 icons; there is no `mail` — use `file` for email hand-offs.)",
         "components[i][k].kind — standard | focal | external. focal triggers the accent palette (§5); external switches to a 4-2 dashed stroke and muted ink to signal \"this is outside our scope.\"",
         "components[i][k].color — optional per-component color override (§4). Ignored on kind: focal (accent wins).",
         "connectors[k].from / connectors[k].to — refer to a component id. Cross-zone, cross-row, same-zone vertical, and same-zone horizontal all legal; routing chosen by §3.",
@@ -1316,7 +1317,7 @@
           "body": ""
         },
         {
-          "head": "Footer bar wired to one component. Footer = cross-cutting layer-wide concern; a connector from a footer to a specific component is a category error (use type-dp-integration.md's AUTH-line pattern only when the footer service truly authenticates all components, and even then the line lands at the zone bottom edge, not at a specific tool).",
+          "head": "Footer bar wired to one component. Footer = cross-cutting layer-wide concern; a connector from a footer to a specific component is a category error (use the `dp-integration` type's AUTH-line pattern only when the footer service truly authenticates all components, and even then the line lands at the zone bottom edge, not at a specific tool).",
           "body": ""
         },
         {
@@ -1347,7 +1348,7 @@
           "情绪曲线"
         ]
       },
-      "reference": "references/type-journey.md",
+      "upstreamDoc": "references/type-journey.md",
       "layout": [
         "Stage headers — 5 equal columns, 200px wide, 24px gutters (max 6 stages). Each column: an eyebrow-role 8px uppercase tracked eyebrow (STAGE 1 … STAGE 5) over the stage name in the node-name role, 12px, weight 600, both centered on the column.",
         "Sentiment band (the differentiator) — a 160px-tall plot area directly under the headers. 3 horizontal reference hairlines at rule 0.10 opacity mark the levels HIGH / NEUTRAL / LOW — eyebrow role 8px muted, anchored end in a 64px left margin. Never emoji, never writing-mode vertical text for these labels. A smooth muted 1.5px polyline runs through one r=5 dot per stage, each value snapped to one of five ordinal levels (HIGH, MED-HIGH, NEUTRAL, MED-LOW, LOW) — only the three that are actually used need a labeled hairline. The trough stage's dot and its incoming segment are accent; everything else on the curve is muted.",
@@ -1412,11 +1413,11 @@
           "任务状态"
         ]
       },
-      "reference": "references/type-kanban.md",
+      "upstreamDoc": "references/type-kanban.md",
       "layout": [
         "Up to 5 vertical columns of equal width (240px), 32px gutters. Column background is ink @ 0.02; no column border.",
         "Header band per column: column name in the node-name role, 12px, weight 600, anchored left. A right-anchored WIP chip — a rectangular tag (rx=2, never a pill) holding n/limit in the eyebrow role at 8px — or bare n on a queue or terminal column, which carries no limit. Every in-process column states one. A hairline rule separator sits directly under the header band, full column width.",
-        "Cards: the §6 node-box pattern (primitives-core.md) at rx=6, column width minus 16px padding on each side, 56px tall, 12px vertical gap between cards. Content: title in the node-name role, 12px, weight 600, and a sublabel-role 9px muted sublabel line for TICKET-ID · owner (e.g. AVA-214 · nadia).",
+        "Cards: the §6 node-box pattern (`diagram_tokens` geometry) at rx=6, column width minus 16px padding on each side, 56px tall, 12px vertical gap between cards. Content: title in the node-name role, 12px, weight 600, and a sublabel-role 9px muted sublabel line for TICKET-ID · owner (e.g. AVA-214 · nadia).",
         "Drawing order: background → column fills → header text + WIP chips → header rules → cards (each: box, then left accent bar if blocked, then title, then sublabel) → legend."
       ],
       "antiPatterns": [
@@ -1445,7 +1446,7 @@
           "body": ""
         },
         {
-          "head": "Pill-shaped WIP tags. The chip is a rectangle at rx=2, matching the type-tag primitive in the §6 node box (primitives-core.md) — pills read as status badges from an unrelated design language.",
+          "head": "Pill-shaped WIP tags. The chip is a rectangle at rx=2, matching the type-tag primitive in the §6 node box (`diagram_tokens`) — pills read as status badges from an unrelated design language.",
           "body": ""
         }
       ],
@@ -1477,7 +1478,7 @@
           "抽象层"
         ]
       },
-      "reference": "references/type-layers.md",
+      "upstreamDoc": "references/type-layers.md",
       "layout": [
         "Horizontal bands stacked vertically. Each layer is a full-width rectangle (same x, same width). 4–6 layers total.",
         "Layer height 56–72px, width typically 800–880px inside a 1000px viewBox.",
@@ -1521,7 +1522,7 @@
           "排行变化"
         ]
       },
-      "reference": "references/type-line.md",
+      "upstreamDoc": "references/type-line.md",
       "layout": [
         "Plot area margins: left 80px, bottom 60px, top 40px, right 40px — inside 0 0 1000 500 viewBox.",
         "Points: 4–12 data points. Fewer → consider a summary stat; more → aggregate into periods.",
@@ -1530,7 +1531,7 @@
         "Lines: <polyline> with fill=\"none\". Focal series stroke-width=\"1.8\", others \"1.2\".",
         "Vertex dots: only on the focal series (r=4, filled). Other series: line only.",
         "Area fill (optional): <polygon> closing back to y=420 (x-axis baseline) at 0.08 opacity. Use for the focal series only when the area meaning is important.",
-        "Multi-series: up to 5 series. Focal = accent. Others = series-1, series-2, series-3, series-4 from style-guide.md. Apply series palette in order — don't skip.",
+        "Multi-series: up to 5 series. Focal = accent. Others = series-1, series-2, series-3, series-4 from the `diagram_tokens` series palette. Apply series palette in order — don't skip.",
         "Legend: horizontal strip at the bottom. Swatch = 16×8px rect with the series fill/stroke. One entry per series."
       ],
       "antiPatterns": [
@@ -1574,7 +1575,7 @@
           "反馈"
         ]
       },
-      "reference": "references/type-loop.md",
+      "upstreamDoc": "references/type-loop.md",
       "layout": [
         "Budget (hard): 5–8 stations plus exactly one hub. Above 8 stations, split the subject into an overview Loop and one or more detail diagrams. Exactly one hub — a loop with two hubs is two diagrams. At most one station may set focal: true; zero is allowed when no editorial gate deserves emphasis.",
         "Station order is semantic. stations[0] is the top station, then entries proceed clockwise. The last station always connects back to station 0; if that return would be false, use a Flowchart instead.",
@@ -1628,7 +1629,7 @@
           "质量层级"
         ]
       },
-      "reference": "references/type-medallion.md",
+      "upstreamDoc": "references/type-medallion.md",
       "layout": [
         "tiers[i].style — one of outer, default, focal, cold. Drives the card's fill/stroke palette (§2.4).",
         "tiers[i].focal: true — exactly one tier may declare this. Overrides style to focal and switches the promotion arrow into this tier to focal automatically.",
@@ -1682,14 +1683,14 @@
           "范围"
         ]
       },
-      "reference": "references/type-nested.md",
+      "upstreamDoc": "references/type-nested.md",
       "layout": [
         "3–5 rounded rectangles (rx=8), nested with consistent inset padding (24–32px horizontal, 32–36px vertical recommended).",
         "Each level labeled at the top-left in the eyebrow role (7–8px, letter-spacing 0.14em). Labels sit on a paper-colored mask rect over the ring's top border.",
         "Stroke hierarchy: outer rings faint (rgba(..,0.30–0.45)), progressing to muted, to ink, to coral at the innermost focal.",
         "Fills step up in opacity from outer to inner: rgba(..,0.015) → rgba(..,0.025) → accent-tint on the innermost.",
         "Optional file-icon glyph (folded-corner rect) inside each level hints at scope content.",
-        "Italic callout-role asides (see references/primitive-annotation.md) — 1–2 max."
+        "Italic callout-role asides (callout 角色见 `diagram_tokens` 的 typography) — 1–2 max."
       ],
       "antiPatterns": [
         {
@@ -1724,7 +1725,7 @@
           "团队"
         ]
       },
-      "reference": "references/type-org-chart.md",
+      "upstreamDoc": "references/type-org-chart.md",
       "layout": [
         "Root owner or front door at top center. Use one coral focal node for the person/team/agent that receives ambiguous work.",
         "Tier 1 nodes are departments, pods, queues, or primary routing buckets. Keep them horizontally aligned.",
@@ -1794,7 +1795,7 @@
           "周期数据"
         ]
       },
-      "reference": "references/type-polar.md",
+      "upstreamDoc": "references/type-polar.md",
       "layout": [
         "one quantitative series;",
         "4–8 equally spaced categories in a meaningful clockwise order;",
@@ -1876,7 +1877,7 @@
           "数据交接"
         ]
       },
-      "reference": "references/type-process.md",
+      "upstreamDoc": "references/type-process.md",
       "layout": [
         "lanes[k].key — the 3-letter role badge text shown inside every node in that lane.",
         "lanes[k].name — 1 or 2 line lane label; uppercase mono.",
@@ -1975,7 +1976,7 @@
           "层级排名"
         ]
       },
-      "reference": "references/type-pyramid.md",
+      "upstreamDoc": "references/type-pyramid.md",
       "layout": [
         "4–6 layers. Each layer is a trapezoid built from an SVG <polygon> with 4 points.",
         "Consistent layer height (56–72px).",
@@ -2023,7 +2024,7 @@
           "2x2"
         ]
       },
-      "reference": "references/type-quadrant.md",
+      "upstreamDoc": "references/type-quadrant.md",
       "layout": [
         "2×2 grid. Axis lines: 1px ink cross through the center.",
         "Axis labels: Jobs-minimal. One single word at each arrow tip — no glyphs baked into the label (no ↑ / → / ← / ↓), no parentheticals, no \"HIGH / LOW\" modifiers. eyebrow role at 9px regular weight, tracked 0.18em, uppercase. Flank the arrow tips — never sit labels on top of the axis line. Shorten the arrow enough (~60–80px inside the viewBox edge) to leave breathing room for the labels beyond the tips.",
@@ -2061,7 +2062,7 @@
           "能力评估"
         ]
       },
-      "reference": "references/type-radar.md",
+      "upstreamDoc": "references/type-radar.md",
       "layout": [
         "N axes (3–5). Equally spaced on a regular polygon-N. First axis at the top (-90°), going clockwise. Above 5 → split or use a comparison table.",
         "Five concentric grid rings at fractions 0.2 / 0.4 / 0.6 / 0.8 / 1.0 of the radius. Drawn as closed polygons connecting the axis vertices at that fraction. Inner four at rule 0.10 opacity, outer ring at rule-solid 0.20 (a hint stronger to anchor the chart).",
@@ -2123,7 +2124,7 @@
           "汇聚"
         ]
       },
-      "reference": "references/type-sankey.md",
+      "upstreamDoc": "references/type-sankey.md",
       "layout": [
         "Exactly 3 stage columns, left → right. No more, no less — above 3 stages, split into two linked diagrams.",
         "Nodes are vertical bars, width=12, solid ink fill, no stroke. Height is proportional to the quantity passing through, rounded to the nearest 4px so it stays on-grid — the rounding is a rendering step, not a data change; the true value still prints in the quantity sublabel.",
@@ -2215,7 +2216,7 @@
           "分布"
         ]
       },
-      "reference": "references/type-scatter.md",
+      "upstreamDoc": "references/type-scatter.md",
       "layout": [
         "Plot area margins: left 80px, bottom 60px, top 40px, right 40px — inside 0 0 1000 500 viewBox.",
         "Point count: 5–30 points. Fewer → just describe the relationship in prose; more → bin into a density contour.",
@@ -2452,7 +2453,7 @@
           "api调用"
         ]
       },
-      "reference": "references/type-sequence.md",
+      "upstreamDoc": "references/type-sequence.md",
       "layout": [
         "Actors as boxes in a horizontal row at the top.",
         "Lifelines: dashed vertical lines descending from each actor to the bottom.",
@@ -2511,7 +2512,7 @@
       ],
       "budget": [
         {
-          "head": "Max lifelines: 5 (same as the §7 budget table in layout-budget.md).",
+          "head": "Max lifelines: 5 (same as the budget table in `diagram_tokens`).",
           "body": ""
         },
         {
@@ -2609,7 +2610,7 @@
           "客户视角"
         ]
       },
-      "reference": "references/type-service-blueprint.md",
+      "upstreamDoc": "references/type-service-blueprint.md",
       "layout": [
         "Orientation: stages as equal columns (left → right in narrative order), layers as labeled rows (top → bottom). No connector arrows in this version — that is swimlane territory.",
         "ViewBox: 0 0 1280 720 for the minimal examples. Full editorial keeps the same SVG and adds cards.",
@@ -2667,7 +2668,7 @@
           "生命周期"
         ]
       },
-      "reference": "references/type-state.md",
+      "upstreamDoc": "references/type-state.md",
       "layout": [
         "States are rounded rectangles (rx=8), labeled in the node-name role.",
         "Start: filled ink dot (r=6). End: ringed dot (outer r=8 outline, inner filled r=5).",
@@ -2704,7 +2705,7 @@
           "发布规划"
         ]
       },
-      "reference": "references/type-story-map.md",
+      "upstreamDoc": "references/type-story-map.md",
       "layout": [
         "Vertical stack, top to bottom:",
         "1. Backbone — up to 5 activities in left-to-right narrative order, as wide header cards (200px, rx=6, ink @ 0.05 fill, muted stroke). Each card: the activity name in the node-name role, 12px, weight 600, above an eyebrow-role 8px uppercase tracked eyebrow (ACTIVITY 1 … ACTIVITY 5). 24px gutters between cards. 2. Walking skeleton row — directly under each activity, its user steps as smaller cards (rx=4, 32px tall, white fill, ink stroke), node-name family 12px. One or two per activity; reserve room for two so every activity's row bottom aligns even when it only has one step. 3. Release slices — horizontal bands below the skeleton row, each a full-width lane with an eyebrow-role 8px uppercase tracked label (MVP, RELEASE 2, LATER) sitting in a 96px left margin. Band background alternates ink @ 0.02 / none. Inside each band, story cards (rx=4, 48px tall) sit in their activity's column: story title in the node-name role, 12px, weight 600, plus a sublabel-role 9px estimate/ticket sublabel (e.g. RPT-114 · 3pt). Whenever any slice has a gap (an activity with no card in that row), add rule hairline column separators (0.8px, dashed 4,4, 0.10 opacity) running from just under the backbone down to the bottom of the last slice, drawn before the cards — without them, a gappy grid reads as scattered rather than mapped to its activity. 4. The release cut line — a full-width horizontal accent rule (1.5px) immediately under the MVP band, with a masked arrow-label-role 8px label RELEASE CUT at its right end. This is accent element one. 5. Legend — horizontal strip at the bottom per the global rule (hairline separator above): one swatch for the default story card, one for the highest-risk treatment, one for the release-cut line."
@@ -2770,7 +2771,7 @@
           "交接"
         ]
       },
-      "reference": "references/type-swimlane.md",
+      "upstreamDoc": "references/type-swimlane.md",
       "layout": [
         "Horizontal lanes (or vertical columns) — one per actor/team. Label each lane in the left margin (or top) with an eyebrow-role label.",
         "Lane dividers: 1px hairlines.",
@@ -2807,7 +2808,7 @@
           "里程碑"
         ]
       },
-      "reference": "references/type-timeline.md",
+      "upstreamDoc": "references/type-timeline.md",
       "layout": [
         "Horizontal hairline baseline across the middle (stroke-width=1).",
         "Tick marks at time boundaries (quarters, months, sprints) with date labels below in the arrow-label role.",
@@ -2834,7 +2835,7 @@
     {
       "id": "tree",
       "title": "Tree / Hierarchy",
-      "bestFor": "org charts, dependency trees, taxonomy, file trees, decision breakdowns, skill trees. For hierarchical, ID-addressable block decomposition with per-block I/O, constraints, and implementation traceability, load semantic-patterns.md § Traceable block decomposition first — it specializes this layout without changing it.",
+      "bestFor": "org charts, dependency trees, taxonomy, file trees, decision breakdowns, skill trees. For hierarchical, ID-addressable block decomposition with per-block I/O, constraints, and implementation traceability, take the `diagram_types` semantic-pattern routing for Traceable block decomposition first — it specializes this layout without changing it.",
       "zh": {
         "title": "树",
         "aliases": [
@@ -2845,7 +2846,7 @@
           "分解"
         ]
       },
-      "reference": "references/type-tree.md",
+      "upstreamDoc": "references/type-tree.md",
       "layout": [
         "Root at top, children fan out below (or root at left, children to right).",
         "Nodes are small labeled rectangles (rx=6), node-name role 12px 600 name + optional sublabel role 9px. Width 120–180px, height 40–52px.",
@@ -2891,7 +2892,7 @@
           "占比"
         ]
       },
-      "reference": "references/type-treemap.md",
+      "upstreamDoc": "references/type-treemap.md",
       "layout": [
         "Plot area: x 40 → 956, y 40 → 420 inside a 0 0 1000 500 viewBox — the same vertical rhythm as bar, line and scatter, so the legend block sits where a reader of those types already expects it (rule at y=462, LEGEND at 478, keys at 488).",
         "Squarified layout (Bruls et al., 2000): sort descending, lay each row against the shorter side of the remaining rectangle. Aspect ratios stay near 1, which is what makes two areas comparable by eye. Never lay cells out in simple stripes — long thin cells cannot be compared.",
@@ -2939,7 +2940,7 @@
     {
       "id": "uml-class",
       "title": "UML Class Diagram",
-      "bestFor": "the static structure of an object model — classes, what they own, what they inherit, and what they merely depend on. The distinguishing content is the operations compartment and the typed relationship vocabulary (the arrowheads carry meaning). ER cannot express either — use this type only when operations or the inheritance/composition vocabulary are the point of the diagram, and type-er.md when the story is entities and cardinality.",
+      "bestFor": "the static structure of an object model — classes, what they own, what they inherit, and what they merely depend on. The distinguishing content is the operations compartment and the typed relationship vocabulary (the arrowheads carry meaning). ER cannot express either — use this type only when operations or the inheritance/composition vocabulary are the point of the diagram, and the `er` type when the story is entities and cardinality.",
       "zh": {
         "title": "uml",
         "aliases": [
@@ -2949,7 +2950,7 @@
           "组合"
         ]
       },
-      "reference": "references/type-uml-class.md",
+      "upstreamDoc": "references/type-uml-class.md",
       "layout": [
         "Each class is a single box (rx=6), divided by full-width hairlines into up to three compartments. Compartment heights follow content — never pad to a uniform height.",
         "Attribute/operation lines are a single combined string, not the two-column field/type layout ER uses — that visual distinction keeps the two types from reading the same.",
@@ -3009,7 +3010,7 @@
           "交集"
         ]
       },
-      "reference": "references/type-venn.md",
+      "upstreamDoc": "references/type-venn.md",
       "layout": [
         "Prefer 2 or 3 circles. Avoid 4+ (unreadable — use a matrix instead).",
         "Circle stroke: 1px hairline, color per-set (ink, muted, soft).",
@@ -3061,7 +3062,7 @@
           "自建还是购买"
         ]
       },
-      "reference": "references/type-wardley.md",
+      "upstreamDoc": "references/type-wardley.md",
       "layout": [
         "Y axis — value chain. Visible to the user at the top, down to Invisible at the bottom. Label the axis as stacked separate <text> lines flanking the axis endpoints — never writing-mode to rotate a label vertically. Axis line rule-solid at 0.20 opacity.",
         "X axis — evolution. Four bands separated by three vertical hairlines: Genesis | Custom-built | Product | Commodity. Band separators are rule at 0.10 opacity, dashed 4,4. Band labels sit along the bottom axis: eyebrow role 8px, uppercase, tracked, muted. Axis line rule-solid at 0.20 opacity.",
@@ -3133,7 +3134,7 @@
           "预算"
         ]
       },
-      "reference": "references/type-waterfall.md",
+      "upstreamDoc": "references/type-waterfall.md",
       "layout": [
         "Orientation: vertical columns only, left → right in narrative order: start total, then each signed bridge, optional subtotal, end total. A horizontal waterfall reads as a Gantt.",
         "Plot area: left 80px (y-axis labels), bottom 60px (category labels), top 40px, right 40px — inside a 0 0 1000 500 viewBox, same frame as the bar chart. Plot band x 80→960, y 40→420.",
@@ -3160,7 +3161,7 @@
           "body": ""
         },
         {
-          "head": "A truncated value axis. The domain follows the data's range, never its observed extremes — the same rule, cases, and all-zero fallback as the dumbbell (type-bar.md § Dumbbell honesty rules). A waterfall on a clipped domain inflates every bridge.",
+          "head": "A truncated value axis. The domain follows the data's range, never its observed extremes — the same rule, cases, and all-zero fallback as the dumbbell (the `bar` type's Dumbbell honesty rules). A waterfall on a clipped domain inflates every bridge.",
           "body": ""
         },
         {

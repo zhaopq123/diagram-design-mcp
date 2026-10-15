@@ -1,9 +1,14 @@
 {
   "name": "workbuddy-diagram-design",
-  "version": "1.0.0",
-  "description": "编辑级图表设计系统，以 MCP 服务形式提供：45 种图表类型的设计规范、合规骨架生成、机械自检、Mermaid/draw.io/Excalidraw 结构提取与图库页。内容进内容出，不触碰调用方文件系统。 Editorial diagram design as an MCP server: 45 diagram types, a design system, a compliant scaffold generator, a mechanical taste gate, and structure import from Mermaid/draw.io/Excalidraw.",
+  "version": "1.1.0",
+  "description": "编辑级图表设计系统，以 MCP 服务形式提供：45 种图表类型的设计规范、82 个单色图标、合规骨架生成、机械自检、Mermaid/draw.io/Excalidraw 结构提取与图库页。内容进内容出，不触碰调用方文件系统。 Editorial diagram design as an MCP server: 45 diagram types, an 82-icon library, a design system, a compliant scaffold generator, a mechanical taste gate, and structure import from Mermaid/draw.io/Excalidraw.",
   "type": "module",
   "main": "src/server.mjs",
+  "icon": "./icon.svg",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zhaopq123/workbuddy-diagram-design.git"
+  },
   "engines": {
     "node": ">=20"
   },
@@ -12,7 +17,8 @@
     "test": "node --test",
     "smoke": "node scripts/smoke-remote.mjs",
     "audit": "node scripts/audit.mjs",
-    "examples": "node scripts/build-examples.mjs"
+    "examples": "node scripts/build-examples.mjs",
+    "icons": "node scripts/build-icons.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1"
@@ -24,6 +30,7 @@
     "examples",
     "deploy",
     "skill",
+    "icon.svg",
     "README.md",
     "NOTICE.md",
     "LICENSE"

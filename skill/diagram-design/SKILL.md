@@ -9,7 +9,7 @@ description: 画专业级图表（架构图、流程图、时序图、状态机�
 
 ## 服务位置
 
-远端 MCP 服务（手机常驻），工具名前缀 `diagram_`：`diagram_tokens` / `diagram_sizes` / `diagram_types` / `diagram_scaffold` / `diagram_check` / `diagram_import` / `diagram_gallery`。
+远端 MCP 服务（手机常驻），工具名前缀 `diagram_`：`diagram_tokens` / `diagram_sizes` / `diagram_icons` / `diagram_types` / `diagram_scaffold` / `diagram_check` / `diagram_import` / `diagram_gallery`。
 
 **内容进、内容出**：服务不碰你的文件系统。所有内容你传进去，成品 HTML 它还给你，落盘由你来做。
 
@@ -18,9 +18,10 @@ description: 画专业级图表（架构图、流程图、时序图、状态机�
 1. **`diagram_types`** — 先选型。要展示"谁调用谁"用 architecture，展示"步骤顺序"用 flowchart，展示"消息往返"用 sequence，展示"两个维度权衡"用 quadrant。不确定就传 `query` 搜（支持中文：「时序」「象限」「架构」）。
 2. **`diagram_sizes`** — 定四个旋钮：格式（doc-inline / presentation / print）、尺寸、细节层级、受众。**尺寸预设同时决定画布和字号，不要拆开看。** 装不下就拆图，不要缩字号。
 3. **`diagram_tokens`** — 取权威数值。类型文档里写的是 `{ink}`、`{accent}` 这类**角色名**，具体十六进制值以这里为准。画之前必须取。
-4. **`diagram_scaffold`** — 起手。产出的骨架已经通过机械自检，把第二个内容块**原样**写进 `.html` 文件，再把内容填进去。
-5. **`diagram_check`** — 收尾。传 HTML 全文。`findings` 里的 error **必须修**；`judgement` 是你自己的编辑责任；`limits` 告诉你这个检查器查不出什么。
-6. **向用户交代** — 说清楚画了什么、砍了什么、为什么这么取舍。别只说"已完成"。
+4. **`diagram_icons`** — 只在类型真要图标时才调（`it-state` / `dp-integration` / `high-level` 的 `icon` 字段）。不传参数拿索引（便宜），点名 `names` 才回 `<svg>` 标记；中文别名能直接搜（「数据库」「防火墙」）。图标用 `currentColor`，自动跟皮肤；**描边件与品牌剪影不要混在一张图里**，也别拿图标代替节点名字——能写清 host / service 就别贴个云厂商 logo。
+5. **`diagram_scaffold`** — 起手。产出的骨架已经通过机械自检，把第二个内容块**原样**写进 `.html` 文件，再把内容填进去。`size=fit` 时要一并传 `contentWidth` / `contentHeight`，否则 viewBox 推不出来，会静默回退成默认画框（返回值里会点名告知）。
+6. **`diagram_check`** — 收尾。传 HTML 全文。`findings` 里的 error **必须修**；`judgement` 是你自己的编辑责任；`limits` 告诉你这个检查器查不出什么。
+7. **向用户交代** — 说清楚画了什么、砍了什么、为什么这么取舍。别只说"已完成"。
 
 改既有图 → 从第 3 步开始。从 Mermaid/draw.io/Excalidraw 迁移 → 先 `diagram_import` 提结构，**然后重画，不是转换**（源坐标、颜色、字体、形状怪癖全丢，只留内容），最后向用户交"保真度账本"：合并了什么、塌缩了什么、丢掉了什么。
 
@@ -45,7 +46,7 @@ description: 画专业级图表（架构图、流程图、时序图、状态机�
 
 如果你看不到 `diagram_*` 工具，按这个顺序查，别直接说"服务没连上"：
 
-1. **服务还活着吗** — 部署实例上跑 `curl http://<host>:8400/health`。`ok:true` 且 `tools:7` 才算活着。
+1. **服务还活着吗** — 部署实例上跑 `curl http://<host>:8400/health`。`ok:true` 且 `tools:8` 才算活着。
 2. **连接器在列表里吗** — WorkBuddy 的 MCP 配置**不热重载**，改完 `mcp.json` 要重开应用，或者打开「设置 → 安全中心 → 工具控制 → 自定义 MCP」触发一次刷新。
 3. **信任了吗** — 用户自行添加的 MCP Server 默认不可信，条目会显示为不可信，要人点一次确认。这步只能用户做，别自己去改 `mcp-approvals.json`。
 4. **信任键绑的是 origin** — URL 里只有 `/mcp` 路径变了不影响，**换了端口或主机要重新信任**。

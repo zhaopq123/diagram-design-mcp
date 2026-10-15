@@ -40,6 +40,15 @@ function loadCatalogue() {
   return cataloguePromise
 }
 
+const iconsUrl = new URL('./core/icons.json', import.meta.url)
+
+/** The 24x24 icon library, loaded once. */
+let iconsPromise
+function loadIcons() {
+  iconsPromise ??= readFile(iconsUrl, 'utf8').then(JSON.parse)
+  return iconsPromise
+}
+
 const list = (items, bullet = '- ') => items.map((item) => `${bullet}${item}`).join('\n')
 
 // ── renderers ────────────────────────────────────────────────────────────────
@@ -150,6 +159,45 @@ function renderTypes(value) {
   return lines.join('\n')
 }
 
+/**
+ * The icon library has two shapes on purpose: an index (cheap, always safe to
+ * ask for) and markup (only for the names actually requested). Dumping 82 inline
+ * `<svg>` blocks into a context window would cost more than the diagram itself.
+ */
+function renderIcons(value) {
+  if (value.mode === 'markup') {
+    const lines = [`# 图标标记（${value.markup.length} 个 · currentColor）`, '', value.usage, '']
+    for (const icon of value.markup) {
+      lines.push(`## \`${icon.name}\`（${icon.group} · ${icon.style === 'stroked' ? '描边' : '填充'}）`)
+      if (icon.desc.length > 0) lines.push(icon.desc)
+      if (icon.zh.length > 0) lines.push(`中文别名：${icon.zh.join('、')}`)
+      lines.push('', '```svg', icon.svg, '```', '', `来源：${icon.library} / \`${icon.upstream}\`（${icon.license}）`, '')
+    }
+    if (value.missing.length > 0) lines.push(`未找到：${value.missing.map((name) => `\`${name}\``).join('、')}。不传 names 调一次可以拿全库索引。`)
+    if (value.omitted > 0) lines.push('', `（单次最多返回 ${value.cap} 个标记，已省略 ${value.omitted} 个：再调一次并只传剩下的 names。）`)
+    return lines.join('\n')
+  }
+  const lines = [`# 图标库索引（${value.total} 个 / ${value.groups.length} 组 · 通用件 24×24 描边，品牌剪影保留各自 viewBox · currentColor）`, '']
+  if (value.filter.length > 0) lines.push(`筛选：${value.filter.join(' · ')} → ${value.total} 个`, '')
+  if (value.groups.length === 0) {
+    lines.push('没有匹配的图标。不传任何参数可调出全库索引。')
+    return lines.join('\n')
+  }
+  lines.push(value.usage, '')
+  for (const group of value.groups) {
+    lines.push(`## ${group.name}（${group.icons.length}）`)
+    for (const icon of group.icons) {
+      lines.push(`- \`${icon.name}\` — ${icon.desc}${icon.zh.length > 0 ? `（${icon.zh.join('、')}）` : ''}${icon.style === 'filled' ? ' · 填充剪影' : ''}`)
+    }
+    lines.push('')
+  }
+  lines.push('要某个图标的完整 `<svg>` 标记，把它放进 `names` 再调一次。')
+  if (value.excluded.length > 0) {
+    lines.push('', `未收录（许可证未确认，不可再分发）：${value.excluded.join('、')}`)
+  }
+  return lines.join('\n')
+}
+
 function renderCheck(value) {
   const lines = [`# 自检报告${value.label === undefined ? '' : `：${value.label}`}`, '']
   lines.push(`结论：**${value.ok ? '通过（无 error）' : '未通过'}** — ${value.errors} 个 error · ${value.warnings} 个 warn`)
@@ -231,6 +279,61 @@ export const TOOLS = [
     },
   },
   {
+    name: 'diagram_icons',
+    description: '取内置图标库：82 个单色图标 / 12 组（通用件 24×24、1.5px 描边；品牌剪影为填充并保留各自 viewBox），全部用 currentColor 所以自动跟随明暗皮肤。不传参数返回索引（组 → 图标名 + 说明 + 中文别名，不含标记，很便宜）；传 names 返回这些图标的完整 <svg> 标记，可直接嵌进图。可选 query（按名称、说明或中文别名筛索引，「数据库」「服务器」这类中文词能直接命中）、group（只看某一分组）、style（stroked 描边=通用件 / filled 填充=品牌剪影；同一张图不要混用）。类型目录里凡是写「图标」字段的地方，名字都出自这里。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        names: { type: 'array', items: { type: 'string' }, description: '可选：要取完整 <svg> 标记的图标名，例如 ["server","database"]。给了 names 就忽略 query/group/style。单次最多 24 个。' },
+        query: { type: 'string', description: '可选：筛索引的关键词，匹配图标名、英文说明、中文别名与分组（如「数据库」「服务器」「cloud」「Kubernetes」）。' },
+        group: { type: 'string', description: '可选：只看这一个分组（分组名见索引标题，如 Compute、Data stack、Brand）。' },
+        style: { type: 'string', enum: ['stroked', 'filled'], description: '可选：stroked=1.5px 描边的通用图标；filled=品牌剪影。' },
+      },
+    },
+    async handler(args) {
+      const library = await loadIcons()
+      const ICON_CAP = 24
+      const wanted = Array.isArray(args.names) ? args.names.map((name) => String(name).trim().toLowerCase()).filter((name) => name.length > 0) : []
+
+      if (wanted.length > 0) {
+        const taken = wanted.slice(0, ICON_CAP)
+        const markup = taken.map((name) => library.icons.find((icon) => icon.name.toLowerCase() === name)).filter((icon) => icon !== undefined)
+        const missing = wanted.filter((name) => !library.icons.some((icon) => icon.name.toLowerCase() === name))
+        return [{ type: 'text', text: renderIcons({
+          mode: 'markup', markup, missing, cap: ICON_CAP, omitted: Math.max(0, wanted.length - ICON_CAP), usage: library.usage,
+        }) }]
+      }
+
+      const query = typeof args.query === 'string' && args.query.trim().length > 0 ? args.query.trim().toLowerCase() : null
+      const group = typeof args.group === 'string' && args.group.trim().length > 0 ? args.group.trim().toLowerCase() : null
+      const style = args.style === 'stroked' || args.style === 'filled' ? args.style : null
+      const filter = []
+      if (query !== null) filter.push(`关键词 "${query}"`)
+      if (group !== null) filter.push(`分组 "${group}"`)
+      if (style !== null) filter.push(`样式 ${style}`)
+
+      const icons = library.icons.filter((icon) =>
+        (query === null || `${icon.name} ${icon.desc} ${icon.group} ${icon.zh.join(' ')}`.toLowerCase().includes(query))
+        && (group === null || icon.group.toLowerCase() === group)
+        && (style === null || icon.style === style))
+
+      const byGroup = new Map()
+      for (const icon of icons) {
+        const bucket = byGroup.get(icon.group)
+        if (bucket === undefined) byGroup.set(icon.group, [icon])
+        else bucket.push(icon)
+      }
+
+      return [{ type: 'text', text: renderIcons({
+        mode: 'index', markup: [], missing: [], omitted: 0, cap: ICON_CAP, usage: library.usage,
+        total: icons.length,
+        groups: [...byGroup].map(([name, items]) => ({ name, icons: items })),
+        filter,
+        excluded: library.excluded.map((icon) => icon.name),
+      }) }]
+    },
+  },
+  {
     name: 'diagram_types',
     description: '查 45 种图表类型的目录：选型指南（要展示 X 就用 Y）、语义模式路由（行为/状态/约束承载意义时先选模式）、以及每种类型的"最适合什么"、布局约定、复杂度预算与反模式。传 query 可按关键词筛选（匹配标题、最适合、布局与反模式，支持中文如「时序」「象限」），不传则返回完整目录。',
     inputSchema: {
@@ -281,6 +384,8 @@ export const TOOLS = [
         skin: { type: 'string', enum: ['light', 'dark'], description: '皮肤：light（默认）或 dark。' },
         fonts: { type: 'string', enum: ['web', 'system'], description: '字体来源：web（默认，引 Google Fonts）或 system（完全离线，不发网络请求）。' },
         body: { type: 'string', description: '可选：直接写进 <svg> 的内容（节点与连线）。连线要画在节点之前——线必须在盒子后面。' },
+        contentWidth: { type: 'number', description: '可选，仅 size=fit：内容包围盒宽度（px）。给齐宽高才会按内容推导 viewBox，否则回退到 doc-inline 画框并在说明里告知。' },
+        contentHeight: { type: 'number', description: '可选，仅 size=fit：内容包围盒高度（px）。' },
         legend: {
           type: 'array',
           items: {
@@ -311,10 +416,19 @@ export const TOOLS = [
         fonts,
         body: typeof args.body === 'string' ? args.body : '',
         legend: Array.isArray(args.legend) ? args.legend : [],
+        contentWidth: typeof args.contentWidth === 'number' ? args.contentWidth : undefined,
+        contentHeight: typeof args.contentHeight === 'number' ? args.contentHeight : undefined,
       })
       const preset = sizeById(size)
+      // Extract the actual viewBox from the generated HTML rather than trusting
+      // preset.viewBox — `fit` may have fallen back to the default frame.
+      const vbMatch = html.match(/viewBox="([^"]+)"/)
+      const vbLabel = vbMatch ? vbMatch[1] : (preset.viewBox ?? '由内容推导')
+      const fitFallback = preset.id === 'fit'
+        && !(typeof args.contentWidth === 'number' && args.contentWidth > 0
+          && typeof args.contentHeight === 'number' && args.contentHeight > 0)
       const note = [
-        `已生成合规骨架。尺寸预设 \`${preset.id}\`（viewBox \`${preset.viewBox ?? '由内容推导'}\`）· 皮肤 ${skin} · 字体来源 ${fonts} · ${Buffer.byteLength(html, 'utf8')} 字节。`,
+        `已生成合规骨架。尺寸预设 \`${preset.id}\`（viewBox \`${vbLabel}\`）· 皮肤 ${skin} · 字体来源 ${fonts} · ${Buffer.byteLength(html, 'utf8')} 字节。${fitFallback ? '\n\n⚠️ `size=fit` 但未给 `contentWidth`/`contentHeight`，已回退到默认画框。下次请一并传入内容包围盒宽高。' : ''}`,
         '',
         '这个文件已经通过机械自检。接下来要你做的是判断部分：布局、层级、焦点、以及删减。',
         `把下面第二个内容块**原样**写进 \`.html\` 文件（建议路径与图同名，如 \`docs/<slug>.html\`），填完内容后用 \`diagram_check\` 复检。`,
