@@ -1,10 +1,10 @@
 {
   "generatedFrom": "cathrynlavery/diagram-design (MIT)",
-  "catalogNote": "upstreamDoc 记录的是上游 cathrynlavery/diagram-design 里的文档路径，仅用于溯源与再生成；本包不分发这些 .md 文件。给 agent 看的规范已全部内联在 layout / budget / antiPatterns 字段里，需要具体数值取 diagram_tokens / diagram_sizes / diagram_icons。",
+  "catalogNote": "upstreamDoc 记录的是上游 cathrynlavery/diagram-design 里的文档路径，仅用于溯源与再生成；本包不分发这些 .md 文件。给 agent 看的规范已内联在 layout / budget / sections / antiPatterns 字段里，语义模式完整条目在 semanticPatterns，逐类型预算上限在 budgetTable；需要具体数值取 diagram_tokens / diagram_sizes / diagram_icons。",
   "typeCount": 45,
   "guide": [
     {
-      "showing": "Components + connections in one system snapshot",
+      "showing": "Components + connections in one snapshot; nested admin vs traffic scopes",
       "use": "Architecture"
     },
     {
@@ -187,39 +187,250 @@
   "semanticPatterns": [
     {
       "trigger": "Fan-in, queue depth, finite capacity, bottleneck",
-      "route": "Fan-in queue / bottleneck → Data flow"
+      "route": "Fan-in queue / bottleneck → Data flow",
+      "triggers": "Several producers converge on one reviewer, service, gate, or constrained resource; the story depends on arrival rate, queue depth, wait, capacity, or backpressure.",
+      "primitives": "Distinct sources; fanned ingress; an ordered queue with visible slots and count; a capacity/service-rate label; one constrained service point; admitted and deferred/rejected outcomes. Label units (8/hour, 3 slots), not just “high.”",
+      "budget": "≤5 sources, ≤5 queue slots, one bottleneck, two outcomes, and ≤9 primary nodes. Aggregate excess sources as a named cohort.",
+      "antiPatterns": "Equal-width pipeline that hides contention; arrows merged before they can be traced; capacity implied only by box size; decorative pile-up; animation that changes item order; red alone meaning overloaded.",
+      "staticFallback": "Show the representative final queue, numeric count/capacity, bottleneck label, and both outcome paths. A still must reveal why work waits."
     },
     {
       "trigger": "Repeated Question / Input / Governance / Output slots across stages",
-      "route": "Stage framework with semantic slots → Process"
+      "route": "Stage framework with semantic slots → Process",
+      "triggers": "A lifecycle or operating model repeats the same semantic questions across stages, commonly Question, Input, Governance, and Output. Cross-stage comparability matters more than message timing.",
+      "primitives": "Ordered stage headers; a consistent slot grid; explicit empty/not-applicable slots; stage-to-stage handoff; stable slot labels; one primary output per stage. Preserve slot order in every stage.",
+      "budget": "3–6 stages, 3–4 slot kinds, ≤20 populated cells, ≤2 lines per cell. Split detail when a cell needs prose.",
+      "antiPatterns": "Each stage invents a different internal layout; slot meaning encoded by position with no labels; fake precision from dozens of cells; confusing stage order with ownership lanes; shrinking text to keep one canvas.",
+      "staticFallback": "Render the full stage × slot matrix with handoffs and explicit — or Not applicable entries. Do not depend on staged reveal to teach the schema."
     },
     {
       "trigger": "Conversation or loose input becomes a structured durable artifact",
-      "route": "Unstructured input → structured artifact → Data flow"
+      "route": "Unstructured input → structured artifact → Data flow",
+      "triggers": "Dialogue, notes, prompts, or a rambling request are elicited, normalized, and written into a durable brief, ticket, record, schema, or other structured artifact.",
+      "primitives": "Source utterance(s); clarifying questions; extracted field/value pairs; a named transformation; the durable artifact boundary; provenance links from representative statements to fields; missing/unknown state.",
+      "budget": "≤4 exchanges, ≤6 artifact fields, one transformation, and ≤3 provenance links. Show representative content, not a transcript.",
+      "antiPatterns": "“AI magic” sparkle between two boxes; artifact shown as another chat bubble; fields appearing without sources; inventing certainty for missing facts; typing animation as the only readable copy.",
+      "staticFallback": "Show a short source excerpt beside the completed labeled artifact, with at least one provenance mapping and any unknown fields visible."
     },
     {
       "trigger": "Two rule traces need pass/fail/skipped/not-reached and first divergence",
-      "route": "Paired policy-evaluation traces → Flowchart"
+      "route": "Paired policy-evaluation traces → Flowchart",
+      "triggers": "Two otherwise similar requests reach different outcomes; the reader needs rule-by-rule PASS, FAIL, SKIPPED, or NOT REACHED state and the first divergence.",
+      "primitives": "The same ordered rules on both traces; explicit status text plus symbol/shape; inputs that differ; final outcomes; a labeled first-divergence marker; a distinction between SKIPPED (applicable flow intentionally bypassed) and NOT REACHED (evaluation stopped earlier).",
+      "budget": "Exactly 2 traces, 3–6 rules, one first divergence, ≤12 status cells, and one outcome per trace. Move rule prose to notes if labels exceed one line.",
+      "antiPatterns": "Comparing two independently ordered flows; green/red dots without words; treating skipped and not-reached as synonyms; highlighting every difference; continuing a denied trace as if downstream rules ran.",
+      "staticFallback": "Show all rule states and both outcomes at once; use a persistent bracket/line and label for the first divergence."
     },
     {
       "trigger": "Trust boundaries plus permitted/forbidden ingress or deploy paths",
-      "route": "Secure paved road → Architecture"
+      "route": "Secure paved road → Architecture",
+      "triggers": "A supported architecture creates a bounded route from intake/build to deployment; trust boundaries, privileged moments, permitted ingress, forbidden ingress, and approved versus blocked deploy paths are the point.",
+      "primitives": "Labeled trust boundaries; actors and identities; permitted ingress with a positive text label; forbidden ingress terminating at the boundary; approved deployment path; blocked bypass path; privileged gate; isolated runtime; audit destination. Use different line styles and stop symbols in addition to color.",
+      "budget": "≤3 trust zones, ≤8 components, ≤10 paths, ≤2 forbidden paths, and one privileged gate. Split control detail into a catalog figure.",
+      "antiPatterns": "Dashed box called “security” with no route semantics; forbidden arrow crossing into the protected zone; secrets or identity implied but unlabeled; every component styled as trusted; a bypass path that visually rejoins the approved route.",
+      "staticFallback": "Render every boundary and both permitted/forbidden routes. Blocked paths must visibly stop before entry or deployment."
     },
     {
       "trigger": "Controls grouped by where they are enforced",
-      "route": "Governance / control catalog → Layer stack"
+      "route": "Governance / control catalog → Layer stack",
+      "triggers": "A control inventory must be understood by where it is enforced: authoring, workspace, merge/CI, deploy/runtime, or another named surface. A single checklist would hide those enforcement points.",
+      "primitives": "Enforcement-surface groups; named controls; enforcement actor (code, platform, human); timing (write, merge, deploy, run); bypassability or exception route; coverage/gap notation.",
+      "budget": "3–5 surfaces, 3–7 controls per surface, ≤24 controls total, and ≤3 attributes per control. Summarize counts only when the item list exists elsewhere.",
+      "antiPatterns": "35 tiny pills; grouping by vague themes instead of enforcement point; mixing aspirations with enforced controls; icons without control names; claiming defense-in-depth without showing surface coverage.",
+      "staticFallback": "Show the complete grouped catalog with surface headers and text labels for actor and enforcement timing; preserve gaps and exceptions."
     },
     {
       "trigger": "Defenses compensate for prior gaps and residual risk propagates",
-      "route": "Compensating security layers → Layer stack"
+      "route": "Compensating security layers → Layer stack",
+      "triggers": "No layer is perfect; each defense covers a failure left by the previous layer, and residual risk must visibly narrow, transfer, or remain through the stack.",
+      "primitives": "Ordered threat/risk input; named defensive layers; each layer's mitigation; explicit limitation or escape; residual-risk carrier between layers; final residual risk and consequence/response. Use labels or decreasing measures, never area alone.",
+      "budget": "3–5 layers, one primary risk thread, ≤2 mitigations per layer, and one final residual-risk statement. Split multiple unrelated threats into separate figures.",
+      "antiPatterns": "Implying the final layer makes risk zero; equal opaque slabs with no propagation; treating audit as prevention; shrinking shapes without numeric or verbal meaning; reversing prevention/detection/recovery order without explanation.",
+      "staticFallback": "Show the complete propagation chain: initial risk → mitigation → escaped risk at every layer → final residual risk and response."
     },
     {
       "trigger": "Hierarchical, ID-addressable decomposition needing per-block I/O, constraints, and a code link",
-      "route": "Traceable block decomposition → Tree"
+      "route": "Traceable block decomposition → Tree",
+      "triggers": "A system or product must decompose into addressable, individually citable sub-elements — each with a stable identifier a reader (or a compliance, audit, or IP record) can point at directly, not a name alone. The reader needs to trace a specific block to its parent, to what it consumes and produces, and to the code that implements it. This describes structure (what the system is made of), not a process — for a sequence of actions, choose a pattern that routes to Flowchart or Swimlane instead.",
+      "primitives": "A stable dotted ID per block (e.g. PAY-001-02), shown as a compact badge using the existing node-box type-tag chip (SKILL.md §6; markup in `diagram_tokens`) — never as a separate connector-adjacent label. A noun-phrase block name — the structural element itself (\"Fraud Screening\"), not an action performed on it — in the node's existing name slot. Parent-child structure is Tree's own elbow connector; this pattern adds no new connector semantics or connector labels. At most one short inbound and one short outbound flow-port label per block, in the existing sublabel slot, shown only when both fit without crowding the name — omit by default. Every block's full record — inputs, outputs, constraints, assumptions, and an implementation path — lives in data-block- attributes on the node (data-block-id, data-block-parent, data-block-name, and terse data-block-input / -output / -constraint / -assumption / -impl values) and, for anything longer than a short phrase, in the sidecar registry (export metadata) — never as additional visible diagram text.",
+      "budget": "Tree's own root+3-tier / 5-per-level caps and the global 9-node ceiling apply as-is — this pattern does not raise them. A hierarchy that needs more splits into a linked set of diagrams, one per subsystem, each independently traceable; the sidecar registry is the layer that reassembles the full graph across files. At most one in/out port-label pair per block when shown at all; constraints and assumptions are never rendered as visible text, only carried in metadata.",
+      "antiPatterns": "Four-sided ICOM boxes with Input/Control/Output/Mechanism arrows on every side — that is IDEF0's grammar, not this pattern's, and it does not fit Tree's connector rules. Drawing input/output arrows between siblings or cousins — that is a dependency graph's job; route to that type instead if cross-block flow must be drawn. Verb-phrase block names — name the structural element, not an action; if a block is genuinely an activity, it likely belongs in a companion Flowchart or Swimlane diagram, not this tree. An ID badge with no matching data-block-id, or a rename not mirrored in the registry. Treating the visible diagram as the complete record — it is a bounded view; the registry is the source of truth for anything not drawn. Labeling the tree connector itself with an ID or name — Tree has no connector-label convention today and this pattern must not invent one.",
+      "staticFallback": "This pattern has no animated form — it is always static; bespoke interaction (click-to-expand, filter-by-ID) is out of this skill's scope entirely (see ADR 0001). Every ID badge, block name, and any shown port label must be legible in the single rendered frame."
     },
     {
       "trigger": "One subject progresses through phases, waits, retries, cancellation, and terminal outcomes",
-      "route": "Lifecycle phase map → State Machine"
+      "route": "Lifecycle phase map → State Machine",
+      "triggers": "One subject advances through a small set of named phases, while waits, retries, cancellation, recovery, and terminal outcomes are as important as the happy path. Use this for the subject's lifecycle, not for messages exchanged between actors.",
+      "primitives": "A left-to-right primary phase rail; 4–5 ordered phase states; a separate interruption/recovery band for waits or retries; a separate terminal-outcome band; labeled transitions; distinct terminal state boxes for cancellation and failure when both can occur. Those labeled boxes are sufficient terminal outcomes; optional start/end pseudo-state markers follow the State Machine reference and count toward the transition budget.",
+      "budget": "4–5 primary phases, ≤2 supporting wait/recovery states, ≤2 terminal states, ≤9 states, and ≤10 transitions. Split lifecycle overview from dense guard logic once either ceiling is reached.",
+      "antiPatterns": "Actor lifelines or message arrows disguised as phases; a request/response exchange that belongs in Sequence; every guard and event from the underlying implementation; interruption states placed on the primary rail; cancellation and failure collapsed into one color-only state; a retry loop with no labeled re-entry point.",
+      "staticFallback": "Show the complete primary rail, every supporting state, both terminal outcomes, and all labeled transitions in one frame. Position and band labels must distinguish progress, interruption/recovery, and termination without relying on color."
+    }
+  ],
+  "budgetTable": [
+    {
+      "limit": "Max unique components / relationships / ledger entries (architecture delta)",
+      "rule": "8 / 10 / 8"
+    },
+    {
+      "limit": "Max admin bands / traffic scopes / nodes (architecture containment)",
+      "rule": "2 / 4 / 8"
+    },
+    {
+      "limit": "Max lifelines (sequence)",
+      "rule": "5"
+    },
+    {
+      "limit": "Max combined fragments (sequence)",
+      "rule": "1 (default); 2 only if each is single-region opt/loop"
+    },
+    {
+      "limit": "Max alt regions (sequence)",
+      "rule": "2"
+    },
+    {
+      "limit": "Max fragment nesting (sequence)",
+      "rule": "1"
+    },
+    {
+      "limit": "Max lanes (swimlane)",
+      "rule": "5"
+    },
+    {
+      "limit": "Max items (quadrant)",
+      "rule": "12"
+    },
+    {
+      "limit": "Max entities (ER)",
+      "rule": "8"
+    },
+    {
+      "limit": "Max nesting levels (nested)",
+      "rule": "6"
+    },
+    {
+      "limit": "Max tree depth",
+      "rule": "4"
+    },
+    {
+      "limit": "Max org chart depth",
+      "rule": "4"
+    },
+    {
+      "limit": "Max org chart nodes",
+      "rule": "12"
+    },
+    {
+      "limit": "Max layers (layer stack)",
+      "rule": "6"
+    },
+    {
+      "limit": "Max parts / levels / focal parts (exploded axonometric)",
+      "rule": "5 / 5 / 1, three detail levels"
+    },
+    {
+      "limit": "Max tagged rooms or buildings / boxes / focal (axonometric plan)",
+      "rule": "8 / 40 / 1"
+    },
+    {
+      "limit": "Max circles (venn)",
+      "rule": "3"
+    },
+    {
+      "limit": "Max layers (pyramid)",
+      "rule": "6"
+    },
+    {
+      "limit": "Max radar axes",
+      "rule": "5"
+    },
+    {
+      "limit": "Max radar series",
+      "rule": "5"
+    },
+    {
+      "limit": "Max focal radar series",
+      "rule": "1"
+    },
+    {
+      "limit": "Max polar categories",
+      "rule": "8"
+    },
+    {
+      "limit": "Max polar series",
+      "rule": "1"
+    },
+    {
+      "limit": "Max focal polar categories",
+      "rule": "1"
+    },
+    {
+      "limit": "Max bars (bar chart)",
+      "rule": "8"
+    },
+    {
+      "limit": "Max bars (waterfall)",
+      "rule": "8 incl. totals, 1 subtotal"
+    },
+    {
+      "limit": "Max cells (treemap)",
+      "rule": "8"
+    },
+    {
+      "limit": "Max series (line chart)",
+      "rule": "5"
+    },
+    {
+      "limit": "Max tasks (Gantt)",
+      "rule": "12"
+    },
+    {
+      "limit": "Max points (scatter plot)",
+      "rule": "30"
+    },
+    {
+      "limit": "Max stages / nodes / flows (sankey)",
+      "rule": "3 / 8 / 12"
+    },
+    {
+      "limit": "Max categories (fishbone)",
+      "rule": "6 bones, 3 sub-causes each"
+    },
+    {
+      "limit": "Max components / links (wardley)",
+      "rule": "9 / 12, 2 movement arrows"
+    },
+    {
+      "limit": "Max columns / cards (kanban)",
+      "rule": "5 / 12 total, 4 per column"
+    },
+    {
+      "limit": "Max stages / rows (user journey)",
+      "rule": "6 / 3, 2 pain markers"
+    },
+    {
+      "limit": "Max stages / layers (service blueprint)",
+      "rule": "6 stages; required customer / frontstage / backstage; optional evidence / support; 1 focal cell"
+    },
+    {
+      "limit": "Max zones / nodes / paths (deployment)",
+      "rule": "3 / 6 / 8, 9 artifacts"
+    },
+    {
+      "limit": "Max nodes / edges (dependency)",
+      "rule": "9 / 14, 4 ranks, 1 cycle"
+    },
+    {
+      "limit": "Max classes / relationships (UML class)",
+      "rule": "7 / 8, 5 members per compartment"
+    },
+    {
+      "limit": "Max activities / slices / cards (story map)",
+      "rule": "5 / 3 / 12"
+    },
+    {
+      "limit": "Max tables / columns / FKs (db schema)",
+      "rule": "5 / 8 shown / 6"
     }
   ],
   "types": [
@@ -247,6 +458,42 @@
         "Nodes: print the same stable ID in both states along with the human-readable name. Treat names, responsibilities, implementation versions, and protocols as semantic attributes; identities survive a rename when the underlying object survives.",
         "Ledger: one brief entry per (object ID, change) pair. Begin with the uppercase change word, name the object, and state the actual difference. Do not describe unchanged objects in the ledger. Keep a readable text measure, with wrapped <tspan> lines when needed.",
         "Responsive presentation: preserve the three-panel comparison on small screens with an accessible horizontal scroll region and a visible scroll hint. Do not compress labels until they become illegible or stack snapshots into independently scaled pictures. Print and export keep the whole comparison."
+      ],
+      "sections": [
+        {
+          "title": "Change vocabulary and redundant encoding",
+          "items": [
+            "State — Meaning",
+            "unchanged — Same identity, semantics, position, and endpoints",
+            "added / ADDED — Present only in After",
+            "removed / REMOVED — Present only in Before",
+            "changed / CHANGED — Retained object whose semantic signature differs",
+            "moved / MOVED — Retained component whose local x or y differs",
+            "rewired / REWIRED — Retained relationship whose ordered source/target IDs differ"
+          ]
+        },
+        {
+          "title": "Public HTML metadata contract",
+          "items": [
+            "data-grid=\"<width> <height> <pitch>\": the same three positive finite numbers in both panels. Width and height are multiples of pitch.",
+            "transform=\"translate(<x> <y>)\": exactly one finite two-number translation, solely for the panel origin. Comma-separated translations are also accepted.",
+            "An ID present only in Before is exactly removed; an ID present only in After is exactly added.",
+            "A retained ID keeps its kind and the same status set in both snapshots. Never recycle a component ID for a relationship or vice versa.",
+            "A signature differs if and only if the retained object is changed. Construct it deterministically from the semantic attributes you want to compare, such as orders-api:v2;mode=enqueue or protocol=https;operation=create-order. Include a changed display name if renaming is part of the story. Preserve attribute order and spelling when values are unchanged.",
+            "Signatures exclude the object ID, snapshot, status, coordinates, visual styles, and relationship endpoints. These have their own checks. A movement or rewire alone must not change the signature.",
+            "A retained component's local (x,y) differs if and only if it is moved. A width/height change additionally requires changed and a changed signature. A changed signature alone does not require different bounds.",
+            "A retained relationship's ordered (data-from,data-to) pair differs if and only if it is rewired. Its path may reroute while that pair stays the same, for example when an endpoint component moves.",
+            "Numeric declarations are finite and have absolute values no larger than 10,000,000; unit suffixes, percentages, and CSS calculations are not coordinate declarations."
+          ]
+        },
+        {
+          "title": "Verification and its boundaries",
+          "items": [
+            "Run python3 scripts/verify-architecture-delta.py --all (or pass explicit HTML paths) and python3 scripts/test-verify-architecture-delta.py. No arguments also checks shipped examples. The stdlib HTML parser reads real attributes, including unquoted values and entities, ignores comments, and rejects malformed SVG nesting. Synthetic fixtures prove both legal cases and adversarial changes independently of the shipped coordinates; the light, dark, and full variants are checked too.",
+            "The verifier enforces the declared structure, differential semantics, grid/bounds geometry, drawn relationship endpoints, budgets, and exact ledger coverage. It rejects CSS transforms/position overrides, CSS sizing that could change bounds, escaped CSS declarations, explicit hidden objects/ledger, and common CSS hiding rules. Ordinary responsive sizing of the outer SVG remains legal.",
+            "It is not a browser renderer or a proof of the source system. Authors remain responsible for honest signatures, labels matching those signatures, readable shape/dash treatments, and an accurate migration story. Exotic CSS cascade/variable effects, clipping and occlusion, connector crossings, intermediate segment clearance, ledger placement, and screen-reader quality still require the normal skin, accessibility, geometry, and rendered-layout gates plus desktop/mobile visual review. Keep semantic geometry in the SVG attributes instead of making CSS part of the data model."
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -306,6 +553,49 @@
         "1–2 coral focal nodes: the primary integration point, the primary data store, or the key decision node.",
         "Dashed boundary rectangles mark regions (VPC, security group, trust zone); labels sit on a paper-colored mask over the boundary line."
       ],
+      "sections": [
+        {
+          "title": "Connector style",
+          "items": [
+            "Rounded right-angle (orthogonal) connectors are MANDATORY for all non-horizontal/vertical connections — diagonal <line> between off-axis nodes is a hard fail (see SKILL.md §6 Mandatory connector rules). Two-bend elbow path with r=8:",
+            "Flip the vertical signs for right+up. Use a plain <line> only when endpoints share the same x or y. Arrow labels sit on the vertical segment, centered horizontally on mid and vertically between the two corners.",
+            "Port selection for vertical connectors. When the destination is noticeably above or below the source, enter the destination through its top or bottom edge. Use a single-bend L-path: leave the source through the side edge that faces the destination's column, run horizontally, turn once, and run vertically into the destination:",
+            "Every segment leaves its box perpendicular to the edge it starts on. Never start a horizontal segment on a top or bottom edge: it runs along the border, hidden behind the node fill, and the arrow looks like it grows out of the corner. When two of these connectors leave the same side edge, fan their ports and keep each port at least 8px from a corner so it never lands on the corner radius.",
+            "Reserve left/right ports on the destination for connections that travel primarily horizontally. Entering a node from the side on a mainly-vertical path looks like the arrow punctures the node face rather than arriving from above or below.",
+            "Dashed paths — same routing rules. Optional, return, async, and passive flows use stroke-dasharray=\"4,3\" and a lighter stroke weight (stroke-width=\"1\"). Apply the same orthogonal routing, port-selection, and bridge/hop rules as solid paths — the dash pattern only communicates semantic weight, not a different routing grammar. When a dashed path and a solid path must cross, bridge the dashed one (it is by definition the less important connection).",
+            "Zone label margin. Leave ≥16px between the bottom of the zone eyebrow label and the top of the first enclosed node. Size the zone rect tall enough to contain this header gap (zone y = node_top − 32; label mask y = zone_y + 4)."
+          ]
+        },
+        {
+          "title": "Crossing arrows — bridge / hop",
+          "items": [
+            "When two orthogonal arrows must cross, add a small arc (hop/bridge) on the less important arrow at the crossing point. The more important arrow is drawn uninterrupted.",
+            "a 8,8 0 0,1 16,0 is an SVG arc: rx=ry=8, large-arc=0, sweep=1 (curves visually upward), advancing 16px right — creating an 8px-radius semicircular bump over the crossing. For a vertical hop over a horizontal, use a 8,8 0 0,0 0,16 on the vertical path.",
+            "Decide which arrow to bridge: bridge the one that is less semantically important (passive, secondary, write-back), or the one with lighter stroke weight (dashed, muted). Never bridge both."
+          ]
+        },
+        {
+          "title": "Zone grouping",
+          "items": [
+            "Leave 12–16px above the first enclosed node — the eyebrow label sits in this margin.",
+            "Zone fill: ink @ 0.02 (2% ink wash). Any stronger competes with node fills.",
+            "Zone label: soft, never ink at an opacity. A zone eyebrow is a boundary label, and soft is the boundary-label role in `diagram_tokens`. An opacity such as ink @ 0.40 composites differently on every paper; on a light warm paper it falls near 2.2:1, unreadable at 7px. The role carries its own contrast contract under any skin.",
+            "Max 3 flat zones per diagram. More and it reads like a swimlane (use that type instead). Nested administrative and traffic scopes under Containment below are not this cap — they nest, so the cap is sibling traffic scopes at one level.",
+            "Dark mode: the roles invert with the skin, so nothing is swapped by hand. Take ink, soft, and paper from the dark column in `diagram_tokens`; opacities stay the same."
+          ]
+        },
+        {
+          "title": "Containment",
+          "items": [
+            "data-grammar=\"architecture-containment\" on the root <svg> — files without it are ordinary Architecture and this contract does not apply.",
+            "data-scope-id + data-scope-kind on every scope's bounds rect (data-role=\"bounds\"). Bounds are always a <rect>, for scopes and nodes alike.",
+            "data-parent on every nested scope and every node, naming the innermost enclosing data-scope-id. Only the outermost scope, which no other scope encloses, may omit it.",
+            "Nodes: data-node-id, data-kind of compute (workloads inside a traffic scope), endpoint (private endpoint inside a traffic scope), or managed (PaaS that belongs to an administrative scope).",
+            "An endpoint carries data-target naming the managed node it reaches.",
+            "A peering path carries data-peering, data-from, and data-to naming the two traffic scopes it joins."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "Every box in coral (\"this is important too\") — hierarchy collapses.",
@@ -317,6 +607,18 @@
         },
         {
           "head": "Legend floating inside the diagram area.",
+          "body": ""
+        },
+        {
+          "head": "Flattening two containment levels into one zone eyebrow (VNET · SNET-APP) — the hierarchy is the claim.",
+          "body": ""
+        },
+        {
+          "head": "A managed PaaS box drawn inside a subnet or VPC — only its private endpoint belongs there.",
+          "body": ""
+        },
+        {
+          "head": "Colour as the only distinction between an administrative band and a traffic box — the shapes must differ, because greyscale still has to tell them apart.",
           "body": ""
         }
       ],
@@ -339,7 +641,7 @@
       "layout": [
         "Plate: One floor slab (6 units) or one site (8 units, small corner radius). Everything stands on it, and nothing extends past its edge.",
         "Walls: 6 units thick and cut at desk height, about 22 units, so no wall hides a room. Doors are gaps in a wall. Walls meet without overlapping: run one wall through a junction and stop the other at its face.",
-        "Furniture and buildings: Boxes on the plate with the house face shading (`exploded` 的 Faces and lines 一条). Heights are to scale with each other. Two footprints never overlap.",
+        "Furniture and buildings: Boxes on the plate with the house face shading (the `exploded` type's Faces and lines). Heights are to scale with each other. Two footprints never overlap.",
         "Flat marks: Roads, paths, and floor tints sit on the plate's top face as flat fills (ink at 0.07) with no thickness. A dashed centre line (ink at 0.25, 6,5) may mark a road.",
         "Racks: Tall shelving is a box of kind rack with the house shading, a shelf line every 14 units, and an upright every 30. Run rack rows along x so the reader sees the lit face and the aisles between rows.",
         "Trees: A canopy cylinder 8 units up on a short trunk, canopy top in rule-solid light or soft dark. Trees are planting, so keep them small and off every footprint.",
@@ -349,6 +651,33 @@
         "A room's tag sits on open floor inside the room. A building's tag sits on its roof. Tags paint after every box so walls never cut them.",
         "Tags never overlap each other. Move a tag to open floor before you shorten its name.",
         "One or two words per name. No leader lines and no numbered key."
+      ],
+      "sections": [
+        {
+          "title": "Projection",
+          "items": [
+            "The same 2:1 dimetric projection as the exploded axonometric, from one function:",
+            "Every element is a rounded prism standing on the plate: r = 0 for walls, furniture, and buildings, r = w / 2 for a tree canopy. The `exploded` type's Projection covers the corner ellipse and the face matrices; an upstream generator script (not in this package) builds every shipped example from the same helpers."
+          ]
+        },
+        {
+          "title": "Optional motion",
+          "items": [
+            "A site that is built in phases can reveal its buildings phase by phase with the pinned upstream motion controller in reveal mode. Each building and its tag form one data-motion-item whose data-step is its phase, at most two per step. Buildings drop 16px into place and fade in, inside the 24px limit in the `diagram_tokens` motion budget.",
+            "A floor plan can reveal by zone the same way. Give each zone's furniture a step, and the builder paints each phase as one contiguous group of boxes (it contracts a phase to one node in the depth sort, so a phase that would have to paint on both sides of a static wall fails the build) plus one group of that phase's room tags after every box. That is two motion items per phase, inside the limit of two per step. Walls and unphased rooms stay static. The static, no-JavaScript, reduced-motion, print, and export states show the finished site."
+          ]
+        },
+        {
+          "title": "Metadata contract",
+          "items": [
+            "The figure: one <g data-axo-plan data-origin=\"ox oy\">.",
+            "The plate: one <g data-plate data-rect=\"x0 y0 x1 y1 r\" data-z=\"0\" data-t=\"t\">.",
+            "Each box: a <g data-box> with data-rect, data-z (the plate top, or 8 above it for a tree canopy), data-h, data-kind (wall, furniture, building, tree, rack), and for a building data-name. Its first path is data-role=\"silhouette\".",
+            "Each room: a <g data-room data-name data-rect>.",
+            "Each tag: a <g data-role=\"tag\" data-name data-at=\"x y z\"> with a backing <rect> and a <text data-role=\"name\">. Its complete text, including inline <tspan> descendants, must match the tag's data-name. The point sits inside the room it names at the plate top, or on the building's roof.",
+            "The focal room or building carries data-focal."
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -404,6 +733,25 @@
         "Focal bar: 1 bar max in accent fill/stroke. All others in muted @ 0.15 fill + muted stroke.",
         "Y-axis line: thin vertical <line> at x=80 from y=40 to y=420."
       ],
+      "sections": [
+        {
+          "title": "Variants",
+          "items": [
+            "Grouped bars: two bars per category, side by side. Use accent for the primary series and series-1 for the secondary. Max 2 groups.",
+            "Stacked bars: segments stacked to total. Use accent for the focal segment; muted tints for others. Document the total at the top of each stack.",
+            "Dumbbell: one row per category, two dots on a single shared horizontal scale joined by a hairline. Use it for a two-state comparison where the distance between the ends is the message — before/after, two cohorts, target vs actual. Two series only; a third dot makes the connector meaningless and the figure is a dot plot.",
+            "Orientation: horizontal only. Rows stack downward and the value axis runs left → right; a vertical dumbbell forces rotated category labels.",
+            "Plot area: left margin 200px for row labels — this replaces the 80px margin above — so x 200→960, y 40→420 inside 0 0 1000 500. Row labels right-aligned at x=188, node-name role 11px 600 ink (the category-label size this type already uses).",
+            "Rows: the 4–8 bar count cap applies. Pitch and origin are fixed per row count so the block stays inside the plot band — a 64px pitch from y=96 overflows y=420 at seven rows:",
+            "Gridlines: vertical at each tick, ink @ 0.08 0.8px, spanning y 56→408. At the domain floor the axis line replaces the gridline rather than doubling it: ink @ 0.25 1px, y 40→420.",
+            "Tick labels: centered under each gridline at y=440, arrow-label role 8px muted.",
+            "Axis title: the value axis carries the family's axis label — eyebrow role 7px muted, letter-spacing=\"0.14em\", centered at x=580, y=456, below the tick labels and clear of the legend rule. A horizontal axis takes the un-rotated form the scatter x-axis uses, not the rotate(-90 24 230) form the column charts apply to their y-axis. The category axis needs no title: the row labels name themselves.",
+            "Dots: r=6, positioned by value. Style by series: the reference end hollow (paper fill, muted stroke 1.5px), the focal end solid accent with a 1px ink stroke. Both marks therefore have a boundary above 3:1 even though the accent fill is not — see below. Fill weight, not hue, carries the pairing.",
+            "Accent marks the series, not a focal row. The solid dot repeats on every row — the one place this variant departs from the one-accent rule above, because the two ends must be told apart in each pair. Do not additionally accent a \"most changed\" row; the sort order already carries rank.",
+            "（此处有截断）"
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "More than 8 bars without grouping (illegible at normal scale).",
@@ -451,6 +799,98 @@
         "Array form: [\"<INPUT_CODE>\", \"<OUTPUT_CODE>\"] — first item is input, second is output.",
         "Codes from §8 (WB, DB, TB, FL, LS). Position is fixed: input chip on the node's bottom-left, output chip on the bottom-right.",
         "nodes[i].color — optional per-node color override. Any valid \"#hex\" string is accepted; the §4 palette is recommended for cross-diagram consistency but not required. Every node can carry its own color independently of others."
+      ],
+      "sections": [
+        {
+          "title": "Layout formulas — deterministic geometry",
+          "items": [
+            "Paper fill across full viewBox.",
+            "Dot pattern: 22×22 grid, circle r=0.8, fill ink @ 0.10.",
+            "Alternating lane tints: odd-indexed lanes (0, 2, …) receive ink @ 0.018 fill.",
+            "Lane dividers: horizontal hairlines at every lane_y_top(k) and at legend_y_top, stroke ink @ 0.12 width 0.8.",
+            "Label column right border: vertical hairline at x = label_col_w, from y = header_h to y = legend_y_top.",
+            "Line 1 at (lane_label_x, lane_y_mid(k) - 4)",
+            "Line 2 at (lane_label_x, lane_y_mid(k) + 8)"
+          ]
+        },
+        {
+          "title": "Arrow rules (mandatory)",
+          "items": [
+            "Single-bend routing: horizontal-first, then vertical. Exit a node from the right edge; enter from the left (same-lane horizontal) or top/bottom (cross-lane vertical).",
+            "No diagonals. Bends use an 8-px Q-bezier corner.",
+            "Same-step cross-lane (vertical): line directly between (step_cx(j), lane_y_top(k_to)−12) and (step_cx(j), lane_y_top(k_to)). Used for admin → engineers triggers under the same step.",
+            "Cross-lane cross-step (focal): exit right, run horizontal past the source node's right edge to a corridor x just before the target's step, then drop vertically.",
+            "Labels: only the accent arrow gets a label. Use a paper-filled rect mask (opaque) 6 px behind the text. Other arrows are unlabelled.",
+            "Z-order: all arrows emitted before any node rect (the rect fills mask the line ends inside the node)."
+          ]
+        },
+        {
+          "title": "Component color override",
+          "items": [
+            "Never on focal nodes / focal steps. The accent already carries that signal. A color on a focal element is ignored.",
+            "Never on arrows. Arrows are topology-driven. If you want a colored edge, pick a different style from §3, not a color override.",
+            "Cap at 3 custom-colored elements per diagram (nodes + lanes + steps combined), in addition to the focal pair (focal node + focal step header). Above 3 the visual signal starts to fragment — if you need more, split the diagram or rethink whether each color carries distinct meaning.",
+            "Subtitles and tool labels stay muted. Only the primary identity (border + role chip + title + icon) carries the color signal.",
+            "#b85450 rust-red — Security / Identity / Governance (admin nodes, LDAP, access control)",
+            "#5a7d9a slate-blue — Observability / Quality (monitoring, data-quality gates, lineage)",
+            "#7a8c47 olive-green — Governance / Lineage (catalog, metadata)",
+            "#8c6d3f warm-brown — Backup / DR / Archive"
+          ]
+        },
+        {
+          "title": "Focal rule",
+          "items": [
+            "One focal step (steps[j].focal: true) — typically the analytical pivot (Analyze, Model, …). Header chip and legend chip both render in accent.",
+            "One focal node (nodes[i].focal: true) — the node that receives the focal handoff. Accent border + accent role chip + ink title.",
+            "One focal arrow (arrows[i].style: \"accent\") — the cross-role handoff into the focal node. Solid accent stroke + labeled with a short payload descriptor (e.g., anon data)."
+          ]
+        },
+        {
+          "title": "Dark mode",
+          "items": [
+            "Token — Light",
+            "Paper — paper",
+            "Ink — ink",
+            "Muted — muted",
+            "Soft — soft",
+            "Accent — accent",
+            "Link — link",
+            "Dot pattern — ink @ 0.10",
+            "Lane tint — ink @ 0.018",
+            "Dividers — ink @ 0.12",
+            "Default chip fill — ink @ 0.12",
+            "Focal chip fill — accent @ 0.20",
+            "Default node fill — paper",
+            "Default node stroke — ink @ 0.25",
+            "Focal node fill — accent @ 0.07",
+            "Focal node stroke — accent",
+            "Custom component colors — C"
+          ]
+        },
+        {
+          "title": "Reproducibility checklist (taste gate)",
+          "items": [
+            "Before emitting SVG, verify every item:",
+            "1. viewBox = \"0 0 {viewBox_w} {viewBox_h}\" derived from n_steps and n_lanes via §2. 2. Header strip at y=0..36; legend strip at y=legend_y_top..viewBox_h (legend_y_top = 36 + n_lanes 80). 3. Every node at (step_cx(j) - 50, lane_y_top(k) + 8) size 100×64. 4. Empty cells render nothing — no placeholder rect, no text. 5. Exactly one focal step (steps[j].focal: true). 6. Exactly one focal node (nodes[i].focal: true). 7. Exactly one focal arrow (style: accent). Labeled, with a paper-masked rect behind the label. 8. All other arrows unlabelled. 9. All arrows emitted before any node rect (z-order rule). 10. Single-bend routing only — no diagonals. Q-bezier r=8 at each bend. 11. Custom component colors ≤ 3 (in addition to the focal pair). Arrows never recolored by component color. 12. Subtitle and tool labels stay muted regardless of any component color.",
+            "---"
+          ]
+        },
+        {
+          "title": "Data-type chips reference (input + output)",
+          "items": [
+            "Input chip at (node_x+4, node_y+54) — bottom-left of the node. Represents the payload format entering the node from upstream.",
+            "Output chip at (node_x+80, node_y+54) — bottom-right of the node. Represents the payload format leaving the node toward downstream."
+          ]
+        },
+        {
+          "title": "Legend (3- or 4-row strip)",
+          "items": [
+            "Row 1 — STEPS at y = legend_y_top + 16: repeat the header chips with their labels. Focal step keeps accent fill.",
+            "Row 2 — DATA TYPE at y = legend_y_top + 37: one swatch per chip type actually used in the diagram. Append a small sub-hint in the muted sublabel role after the chips: left chip = input · right chip = output. This makes the position-based input/output convention explicit for first-time readers.",
+            "Row 3 — CONCERN (only when color overrides are present) at y = legend_y_top + 58: one mini-rect per custom color used, with its semantic label (e.g., Identity · Governance, Data Quality · Observability). The focal accent swatch is also shown here so the reader sees all three colored axes side-by-side.",
+            "Row 4 — FLOW (last row, position depends on whether CONCERN row exists): short line segments with their marker + text label, one per arrow style actually used."
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -596,9 +1036,9 @@
       "upstreamDoc": "references/type-dependency.md",
       "layout": [
         "Ranked layers. Nodes sit in horizontal rank rows by dependency depth: rank 0 (entry points nothing depends on) at the top, deeper ranks below. Forward edges point downward across ranks, or run horizontal within a single rank row when a dependency compresses to the same depth as its dependent (e.g. a shallow sibling dependency) — never upward outside the one marked cycle. Rank rows are 120px apart.",
-        "Nodes are the standard node-box pattern (§6 node-box pattern; 数值以 `diagram_tokens` 的 geometry 为准): rx=6, 160px wide, 56px tall.",
+        "Nodes are the standard node-box pattern (§6; values from `diagram_tokens`): rx=6, 160px wide, 56px tall.",
         "Fan-in badge. Every node carries an eyebrow-role 8px badge in its top-right corner, inside a small rx=2 box, showing how many nodes depend on it (4 in). A mask fully inside a node is a badge chip, not a label — legitimate under §6 rule 6. The node with the highest fan-in is the diagram's structural story; size nothing else to compete with it.",
-        "Node treatments (`diagram_tokens` 的 nodeTreatments 表):",
+        "Node treatments (the `diagram_tokens` nodeTreatments table):",
         "Internal package/service → white fill + ink stroke.",
         "External / third-party → ink @ 0.03 fill + ink @ 0.30 stroke (the External/Cloud treatment).",
         "Leaf with no outgoing edges → ink @ 0.05 fill + muted stroke.",
@@ -676,7 +1116,7 @@
       "upstreamDoc": "references/type-deployment.md",
       "layout": [
         "Three nesting levels, outermost to innermost — reuses the containment grammar from the `nested` type, specialized for infrastructure:",
-        "1. Zone — an environment or network boundary (edge, prod / eu-west-1, data). A large rect, rx=8, fill ink @ 0.02, stroke ink @ 0.20 dashed 4,4. An eyebrow-role 8px (or 7px for tight layouts) uppercase tracked label sits inside the top-left corner, on a paper-colored mask over the border. Zones are drawn first — before arrows and nodes — so labels and boxes paint over them (z-order: bg → zones → arrows → labels → nodes). 2. Infrastructure node — a host, VM, pod, or managed service inside a zone. The §6 node-box pattern (SKILL.md; 标记与数值取 `diagram_tokens` 的 geometry 与 nodeTreatments) at rx=6, with a rectangular type tag (rx=2, not a pill) carrying POD / VM / MANAGED / CDN in the top-left corner. 3. Artifact chip — what is deployed onto that node. A small 24px-tall rect rx=4, fill ink @ 0.05, stroke muted, holding the image or service name in the node-name family at 12px (left-aligned) plus a sublabel-role 9px version tag (right-aligned, e.g. v2.4.1). A node can carry more than one chip (stacked with an 8px gap) when more than one artifact is co-located (a sidecar, for example).",
+        "1. Zone — an environment or network boundary (edge, prod / eu-west-1, data). A large rect, rx=8, fill ink @ 0.02, stroke ink @ 0.20 dashed 4,4. An eyebrow-role 8px (or 7px for tight layouts) uppercase tracked label sits inside the top-left corner, on a paper-colored mask over the border. Zones are drawn first — before arrows and nodes — so labels and boxes paint over them (z-order: bg → zones → arrows → labels → nodes). 2. Infrastructure node — a host, VM, pod, or managed service inside a zone. The §6 node-box pattern (SKILL.md §6; values from `diagram_tokens`) at rx=6, with a rectangular type tag (rx=2, not a pill) carrying POD / VM / MANAGED / CDN in the top-left corner. 3. Artifact chip — what is deployed onto that node. A small 24px-tall rect rx=4, fill ink @ 0.05, stroke muted, holding the image or service name in the node-name family at 12px (left-aligned) plus a sublabel-role 9px version tag (right-aligned, e.g. v2.4.1). A node can carry more than one chip (stacked with an 8px gap) when more than one artifact is co-located (a sidecar, for example).",
         "Replica badge. A node running N copies carries a right-aligned eyebrow-role 8px badge (x3) inside its own small rx=2 box in the node's top-right corner. A mask fully inside a node is a badge chip and is a legitimate exception to the \"mask must not overlap a later node\" rule (SKILL.md §6 rule 6) — it's part of that same node.",
         "Network paths. Orthogonal elbows between nodes (SKILL.md §6, elbow formula and port-selection rules in the `architecture` type), labelled with protocol and port in the arrow-label role at 8px (HTTPS:443, TLS:5432). A path that crosses a zone boundary is link-blue; a path that stays inside one zone is muted. Async or replication paths are dashed 5,4.",
         "Focal rule. The 2 accent elements are the single-point-of-failure or the newly-introduced piece — never more than 2. In the canonical example: the RDS primary (accent-tint fill, accent stroke) and the replication path to its standby (accent, dashed)."
@@ -753,7 +1193,112 @@
         "db → cylinder, sftp → folder-with-arrow, mail → envelope, mainframe → server-with-vents",
         "monitor → desktop screen, chart → bar-chart, globe → globe, api → curly braces",
         "key → key + ring (identity / IDP)",
-        "Any icon name from the built-in icon library works too — call `diagram_icons` for the index, then pass `names` for the markup."
+        "Any explicit icon name in the `diagram_icons` index is also accepted."
+      ],
+      "sections": [
+        {
+          "title": "Layout formulas — deterministic geometry",
+          "items": [
+            "### 2.1 Row placement (cursor algorithm)",
+            "Allocate each platform.rows entry top-to-bottom. The single row (or first row when N>1) anchors to side-column row 2 so its connectors stay horizontal:",
+            "This produces the canonical layout for the standard shape (top bar / 3-node row / bottom bar): Trino at y=104 h=56, primary row at y=176 h=72, Airflow at y=324 h=44. Bottom anchor of Airflow at y=368 (40-px clear from zone bottom at y=408). Note: with the canonical layout there's a 76-px gap between the primary row's bottom (y=248) and Airflow's top (y=324). That gap is intentional — Airflow visually sits at the same y-band as source/consumer row 4 (cy=388), so it reads as a sibling of the bottom side-column row.",
+            "### 2.2 Node placement inside a row entry",
+            "For the canonical 3-node row: node_w = (696 - 32 - 32) / 3 = 210.67. The shipped example uses fixed node_w=160 with custom x positions (288, 480, 672) chosen so each node's cx aligns to the column for connector convenience: 368, 560, 752. Both layouts are valid; the formula above is the default for new diagrams. Document any deviation in the rendered SVG with a comment.",
+            "### 2.3 Bar (full-zone-width) placement",
+            "Bars span the full zone width minus 16-px padding on each side. Bars marked focal: true use bar_h_focal=56 and accent styling (fill rgba(focal_accent, 0.08), stroke focal_accent). Non-focal bars use bar_h_default=44 with muted styling (fill ink @ 0.05, stroke ink @ 0.32).",
+            "### 2.4 Source / consumer placement (side columns)",
+            "All side-column nodes use fixed w=160 h=64. Same fill / stroke pattern: fill muted @ 0.06, stroke soft, stroke-width 1.",
+            "---"
+          ]
+        },
+        {
+          "title": "Connector rules (mandatory)",
+          "items": [
+            "Orthogonal elbows with at most two bends; Q-bezier r=8 at every corner.",
+            "Fan-out staggering: when one node fans out to N targets on the same side, stagger the exit y by ±4 px per index so arrows don't overlap (e.g., Trino → 4 consumers exits at y=124, 132, 140, 148). The vertical segments run in the corridor between the zone edge and the consumer column, also y-staggered.",
+            "Z-order: all connectors drawn before any rect (so node fills mask the line ends).",
+            "Markers: exactly one marker-end per <line> / <path>. Never marker-start.",
+            "Labels: every primary, secondary, federated, auth edge gets a protocol label (the arrow-label role at 8 px, paper-filled rect mask with 6–10 px clear gap above the stroke). trigger edges are unlabelled.",
+            "N=1 → 560",
+            "N=2 → 544, 576",
+            "N=3 → 528, 560, 592"
+          ]
+        },
+        {
+          "title": "Component color override (mirrors the `high-level` type)",
+          "items": [
+            "Never on focal components. focal_accent always wins — a color on a focal component is ignored.",
+            "Never on connectors. If you want a colored edge, pick a different style from §3, not a color override.",
+            "Cap at 2 custom-colored components per diagram (in addition to the focal pair).",
+            "#b85450 rust-red — Security / Identity (AD, Keycloak, Vault)",
+            "#5a7d9a slate-blue — Observability (Prometheus, Datadog, OpenTelemetry)",
+            "#7a8c47 olive-green — Governance / Lineage (OpenMetadata, DataHub)",
+            "#8c6d3f warm-brown — Backup / DR (Velero, Restic)"
+          ]
+        },
+        {
+          "title": "Focal rule",
+          "items": [
+            "Mark with focal: true on the component entry.",
+            "A focal kind: bar uses bar_h_focal=56 (taller) and accent styling.",
+            "A focal kind: row node keeps row_h=72 but uses accent styling.",
+            "The Trino → all consumers edges are always primary (accent), regardless of focal flag on each consumer — this is the serve-flow rule.",
+            "If fewer than 2 or more than 2 components are marked focal: true, halt and ask the user."
+          ]
+        },
+        {
+          "title": "Dark mode",
+          "items": [
+            "Element — Light",
+            "Side-column fill — muted @ 0.06",
+            "Side-column stroke — soft",
+            "Zone fill — ink @ 0.025",
+            "Non-focal bar fill — ink @ 0.05",
+            "Focal fill — accent @ 0.08"
+          ]
+        },
+        {
+          "title": "Reproducibility checklist (taste gate)",
+          "items": [
+            "Before emitting SVG, verify every item:",
+            "1. viewBox = \"0 0 1200 {viewBox_h}\" where viewBox_h = max(600, footer_bottom + 84). 2. Platform zone at x=260 y=72 w=696 h=col_h. Zone label paper-masked across top border at y=zone_y+3. 3. Left column at x=40..200, right column at x=1000..1160 — both 160 wide. 4. Source / consumer rows top at y=92, stride 88 px. 5. platform.rows entries stack inside zone via the §2.1 cursor algorithm; total y-span ≤ zone_h. 6. Inside each kind: row, node x-centers are evenly spaced across zone width (§2.2). 7. Exactly 2 focal components (focal: true). 8. Every edge originating from a kind: bar component uses style: trigger (dashed, unlabelled). 9. Every Trino → consumer edge uses style: primary (the serve-flow rule). 10. Footer nodes connect only to the zone bottom edge via auth style. No edge from a footer to a specific component. 11. Custom component colors ≤ 2 (in addition to the focal pair). Connectors never recolored by component color. 12. All connectors emitted before any node rect (z-order rule).",
+            "---"
+          ]
+        },
+        {
+          "title": "Sources and consumers — icon library",
+          "items": [
+            "ico-db (cylinder) — relational sources",
+            "ico-sftp (folder with down arrow) — file drops",
+            "ico-mail (envelope) — email pulls",
+            "ico-mainframe (server with vents) — legacy systems",
+            "ico-monitor — desktop analytics tools",
+            "ico-chart (bars) — BI / report tools",
+            "ico-globe — public websites",
+            "ico-api (brackets {}) — gateways and 3rd-party clients",
+            "ico-key — identity / IDP",
+            "ico-monitoring (chart-line) — observability stack"
+          ]
+        },
+        {
+          "title": "Identity, common services → connect to the layer, not to components",
+          "items": [
+            "Active Directory (or Keycloak, IAM, OPA, any cross-cutting identity / policy / secrets store) authenticates every component in the platform. Wiring it to one specific tool would understate the trust scope. Connect it instead with a single arrow to the bottom edge of the platform zone, labeled AUTH (§3.3).",
+            "The same rule applies to any other layer-wide service: centralized logging, secrets vault, observability stack, audit sink, mTLS root. Each goes in the footer list, each gets its own row, each gets its own AUTH line up to the zone bottom edge (staggered by index per §3.3). The visual reading is \"the platform layer delegates to all of these,\" which is the architectural truth.",
+            "---"
+          ]
+        },
+        {
+          "title": "Budget — this type exceeds the default",
+          "items": [
+            "4–6 source nodes",
+            "5 platform components",
+            "4–6 consumer nodes",
+            "1–3 footer nodes (identity, observability, backup, …)",
+            "Combine clearly-identical source rows (e.g., four MariaDB databases → one Databases node with sublabel 4 × MariaDB)",
+            "Split into two diagrams (one per integration plane: data vs. identity vs. observability)"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -842,6 +1387,100 @@
         "cells[k].focal: true — exactly one cell may declare this. Overrides level to focal styling.",
         "cells[k].sub — optional 2nd-line text (used with focal). Renders in the sublabel role at 8px below the primary value.",
         "cells[k].color: \"#hex\" — optional per-cell color override (§4)."
+      ],
+      "sections": [
+        {
+          "title": "Layout formulas — deterministic geometry",
+          "items": [
+            "Rect: (comp_col_x, header_y, comp_col_w, header_h), fill white, stroke ink @ 0.12 0.8, rx=6",
+            "Two-line label centered at (comp_col_x + comp_col_w/2, header_y+24) and (…, header_y+40):",
+            "Line 1: \"Component\" — node-name role at 11px, ink",
+            "Line 2: \"vs. AD group\" — sublabel role, muted",
+            "Rect: (role_col_x(j), header_y, role_col_w, header_h), fill ink, rx=6",
+            "Two-line label centered:",
+            "Line 1 at y=92: roles[j].name — node-name role at 11px, white",
+            "Line 2 at y=108: roles[j].code — sublabel role, white at opacity 0.85",
+            "Rect: (comp_col_x, row_y(k), comp_col_w, row_h), fill white, stroke ink @ 0.12 0.8, rx=4",
+            "Name at (comp_col_x + 12, row_y(k) + 22): node-name role at 11px, ink, left-aligned",
+            "Hint (if present) at (comp_col_x + comp_col_w − 12, row_y(k) + 22): sublabel role, muted, right-aligned",
+            "Rect: (role_col_x(j), row_y(k), role_col_w, row_h), rx=4, stroke ink @ 0.12 0.6",
+            "Fill and text-color depend on level (or focal flag) — see §2.4",
+            "Value text centered at (role_col_cx(j), row_y(k) + 22): node-name role at 10px",
+            "Focal cell uses a slightly raised primary text at y=18 and a sub-line at y=30 (sublabel role at 8px)",
+            "\"LEGEND\" eyebrow at (left_pad, legend_y_top + 20): eyebrow role, muted, letter-spacing 0.14em",
+            "Each style: swatch rect (14×12 rx=2) followed by a sublabel role label",
+            "Item x-positions are tabulated left-to-right with ~120-px stride; legend wraps onto a second visual row only if n_roles ≥ 6 (otherwise fits in one line)"
+          ]
+        },
+        {
+          "title": "Cells, not connectors",
+          "items": [
+            "A matrix diagram has no connectors — there are no arrows between cells, no flow lines. The diagram's information is entirely in the cell content + cell styling. The only \"connector-like\" element is the focal cell's accent border, which visually \"calls out\" a specific intersection.",
+            "Cells emit no edges. Don't add arrows pointing into cells or between cells — they belong in a different diagram type.",
+            "---"
+          ]
+        },
+        {
+          "title": "Color overrides",
+          "items": [
+            "Focal cell wins. A focal cell ignores color overrides — accent always.",
+            "Per-cell color overrides level styling for that one cell.",
+            "Per-component / per-role overrides are scoped: component → row label only; role → banner only. They do not spread into the matrix body. To flag a specific intersection, use per-cell.",
+            "Cap: keep total custom-colored entities ≤ 5 per diagram (combining cells + components + roles). Above 5, the matrix reads as colored noise — split into multiple diagrams or rethink which color carries which concern.",
+            "#b85450 rust-red — Security elevation / break-glass / SoX-flagged",
+            "#5a7d9a slate-blue — Quality / monitoring / observability gate",
+            "#7a8c47 olive-green — Approved / governance-cleared / publication-ready",
+            "#c9a23a warm yellow — Working / sandbox / data-scientist zone",
+            "#8c6d3f warm-brown — Archive / cold / DR"
+          ]
+        },
+        {
+          "title": "Focal rule",
+          "items": [
+            "Uses focal styling (accent fill + accent stroke 1.4 + accent text bold)",
+            "May carry a 2-line content: primary value at y = row_y(k) + 18, sub at y = row_y(k) + 30",
+            "Calls out the diagram's central security claim — the one access rule that distinguishes this platform's posture from a generic permissions table"
+          ]
+        },
+        {
+          "title": "Dark mode",
+          "items": [
+            "Token — Light",
+            "Paper — paper",
+            "Ink — ink",
+            "Muted — muted",
+            "Soft (no-access text) — soft",
+            "Accent — accent",
+            "Role-banner fill — ink",
+            "Header / row stroke — ink @ 0.12",
+            "Full / Admin fill — ink @ 0.08",
+            "R/W fill — #FFFFFF",
+            "Read fill — muted @ 0.08",
+            "No-access fill — paper",
+            "Focal fill — accent @ 0.07",
+            "Focal stroke — accent",
+            "Custom component colors — C"
+          ]
+        },
+        {
+          "title": "Reproducibility checklist (taste gate)",
+          "items": [
+            "Before emitting SVG, verify every item:",
+            "1. viewBox = \"0 0 {viewBox_w} {viewBox_h}\" derived via §2 (4 roles × 8 components → 920 × 520). 2. Header row at y=72 h=52. Component header cell white-filled with two-line Component / vs. AD group label. Role banners filled ink with name + AD-group code in white. 3. Data rows start at y=140, stride 40, height 36. rows_bottom = 140 + (n_components−1)·40 + 36. 4. Component label cell rx=4, name left-aligned at x=24, optional hint right-aligned at x = comp_col_x + comp_col_w − 12. 5. Every value cell rx=4, stroke ink @ 0.12 0.6, fill + text matching §2.4 for its level. 6. Exactly one focal cell (or zero). Focal cell stroke accent width 1.4. Primary value at y = row_y(k) + 18; sub (if present) at y = row_y(k) + 30. 7. Cells omitted from cells: render as level: \"none\" with none_label text (default \"No access\"). 8. Custom-colored cells ≤ 2 (in addition to the focal cell). 9. No connector elements anywhere in the SVG. 10. Legend strip at legend_y_top, one swatch per level actually used, hairline separator above. 11. viewBox_h grows with n_components; viewBox_w grows with n_roles.",
+            "---"
+          ]
+        },
+        {
+          "title": "Worked YAML — full inputs for `example-dp-security-matrix.html`",
+          "items": [
+            "n_roles = 4, n_components = 8, no color overrides, one focal cell.",
+            "viewBox_w = 12 + 208 + 12 + 4·148 + 3·16 + 48 = 920 ✓",
+            "row_y(k) produces 140, 180, 220, 260, 300, 340, 380, 420 ✓",
+            "rows_bottom = 420 + 36 = 456; legend_y_top = 476; viewBox_h = 520 ✓",
+            "role_col_x(j) = [232, 396, 560, 724] ✓",
+            "Focal cell at (row=5, col=3) → rect (724, 340, 148, 36) with accent stroke 1.4 ✓"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -945,6 +1584,36 @@
         "The focal part's dot, leader, and sublabel take the accent. Its name stays ink.",
         "No numbered callouts and no legend. The label is on the part it names."
       ],
+      "sections": [
+        {
+          "title": "Projection",
+          "items": [
+            "2:1 dimetric. The ground axes run at 26.565 degrees, so every edge lands on whole pixels when model units are multiples of 4. World x runs right and down, y runs left and down, z runs up. Project every point with one function and never place a coordinate by hand:",
+            "A rounded-rectangle footprint of corner radius r projects to straight edges joined by quarter arcs of one ellipse with rx = r sqrt(2) and ry = r / sqrt(2). Use that one shape for everything: r = 0 is a box or slab, a small r is a product corner, and r = w / 2 = d / 2 is a cylinder. Corner centres stay fixed when you inset an outline, so an inner rim is the same four centres at a smaller radius.",
+            "Draw faces as plain SVG <path> and <polygon> elements with the projected points written in. No CSS 3D, no canvas, no WebGL, and no transform to place geometry. If content ever has to sit flat on a face, the matrices that agree with iso are matrix(1,0.5,-1,0.5,tx,ty) for the top face, matrix(1,0.5,0,-1,tx,ty) for the left face, and matrix(-1,0.5,0,-1,tx,ty) for the right face. Labels never use them: labels stay horizontal.",
+            "an upstream generator script (not in this package) builds every shipped example from this function and is the worked reference for the helpers below."
+          ]
+        },
+        {
+          "title": "Optional motion",
+          "items": [
+            "The source file is the exploded frame. Every part group carries data-motion-item, a data-step counted from the top level down (top level lifts first), and style=\"--lift:Npx\" where N is the part's exploded z minus its assembled z. In this projection a straight-up move in model space is a straight-up move on screen, so one translateY(var(--lift)) is the whole explode.",
+            "The bottom level does not move. Its label and the trace lines arrive together as the last step.",
+            "Each part's label hides at the closed frame and fades in after its part settles. Hide instantly and delay only the reveal, or labels pile up on the closed object for the first half second.",
+            "No JavaScript, prefers-reduced-motion: reduce, print, ?motion=static, and export all show the exploded frame.",
+            "The lift is the one scoped exception to the 24px translation limit in the `diagram_tokens` motion budget, recorded upstream as ADR 0013. Nothing else in the figure moves."
+          ]
+        },
+        {
+          "title": "Metadata contract",
+          "items": [
+            "The figure: one <g data-exploded data-origin=\"ox oy\" data-gap=\"g\"> wrapping every part.",
+            "Each part: a <g> with data-part (key), data-name (the label text), data-rect=\"x0 y0 x1 y1 r\", data-z, data-t, data-level, optional data-kind=\"housing\" for a container and data-focal for the focal part. Animated parts add data-closed-z.",
+            "Inside each part: the first <path data-role=\"silhouette\"> is the part's outline at its declared box, and a <g data-role=\"label\"> holds a <line data-role=\"leader\"> and a <text data-role=\"name\">. Its complete text, including inline <tspan> descendants, must match the part's data-name.",
+            "Trace lines carry data-role=\"trace\"."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "Hand-placed coordinates, or a CSS transform standing in for geometry.",
@@ -1000,12 +1669,25 @@
       },
       "upstreamDoc": "references/type-fishbone.md",
       "layout": [
-        "Spine. A horizontal line (ink, 1.2px) runs left→right at the vertical centre CY, terminating with an arrowhead into an effect box at the right head — the node-box pattern from SKILL.md §6 (数值取 `diagram_tokens` 的 geometry), the observed-effect statement inside.",
+        "Spine. A horizontal line (ink, 1.2px) runs left→right at the vertical centre CY, terminating with an arrowhead into an effect box at the right head — the node-box pattern from SKILL.md §6 (`diagram_tokens`), the observed-effect statement inside.",
         "Bones. Category lines are straight diagonals at a fixed 60° to the spine, alternating above and below, evenly spaced along it. Each bone carries its category name at the outer end in a small tag-style box (rx=4, not a pill) — node-name role, 12px, weight 600.",
         "Sub-causes. Short horizontal ticks (32px, soft) branch off each bone at fixed points along its length, each with a sub-cause label in the sublabel role at 9px sitting past the open end of the tick.",
         "Diagonal exemption. SKILL.md §6 rule 1 (mandatory rounded right-angle elbows) does not apply to the 60° bones — they are this type's defining grammar. The exemption covers bones and sub-cause ticks only; any other connector in a fishbone diagram (e.g. a callout leader, a cross-reference arrow) still uses rounded right-angle elbows.",
         "Focal rule. Exactly one bone is the confirmed root cause: its line is accent, and its category tag uses accent-tint fill + accent stroke. The effect box is styled the same way (accent-tint fill, accent stroke) since it's the diagram's headline. That pair — root-cause bone and effect box — is the full 2-accent budget; every other bone, tag, and tick stays ink / muted / soft.",
         "Drawing order: background → spine → bones → sub-cause ticks → category tag boxes → effect box → legend. Lines before boxes, so box fills cap the line ends cleanly."
+      ],
+      "sections": [
+        {
+          "title": "Math",
+          "items": [
+            "Bone k — Category slot",
+            "1 — first",
+            "2 — second",
+            "3 — third",
+            "4 — fourth",
+            "5 — fifth"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -1167,6 +1849,34 @@
         "Axes: row labels right-aligned in the left gutter (sublabel role 9px, text-anchor=\"end\", x=148); column labels centered above each column (sublabel role 9px, text-anchor=\"middle\"); axis titles in the eyebrow role 7px small-caps rotated/positioned in the margins.",
         "Value text (optional): arrow-label role 8px centered inside each cell. Flip text color to paper when fill opacity ≥ 0.40 (the ink ramp becomes dark enough to carry white); keep ink text below that threshold."
       ],
+      "sections": [
+        {
+          "title": "The fill ramp",
+          "items": [
+            "One ink ramp, one accent. Non-focal cells use a single tonal ramp: rgba(INK, opacity) where opacity is a non-decreasing function of the data value. The shipped example uses opacity = max(0.07, value / max_non_focal × 0.65). Any monotone formula (linear, sqrt, log) passes the verifier as long as opacity never decreases with value.",
+            "One focal cell only. The accent marks the editorially focal cell — the one whose combination of row and column is the figure's argument. It is not the automatically highest value; choose the cell whose story the title is about. data-focal=\"true\" is required; scripts/verify-heatmap.py counts all accent-fill and data-focal cells and fails if more than one is found.",
+            "Ramp bounds: the lowest-value non-focal cell should land at ≥ 0.05 opacity (the cell must be visually distinct from the paper background) and the highest-value non-focal cell at ≤ 0.70 (the ramp must not bleed into the focal accent's territory)."
+          ]
+        },
+        {
+          "title": "Honest-data rule",
+          "items": [
+            "Row × column labels are complete and stated. A heatmap that quietly drops a service with a high rate is a filtered view the reader cannot see. State every included row and column; note any exclusions in the footnote or source line.",
+            "The ramp scale is declared. The legend strip shows the range the ramp covers for non-focal cells, stated as \"LOW\" to \"HIGH\" rather than a continuous scale — because the ramp's job is comparative, not absolute. If the footnote states bounds, those bounds must match the actual minimum and maximum non-focal values in the figure.",
+            "The focal cell is excluded from the ramp's scale. Its value (often an outlier) would collapse every other cell into near-identical opacity if included. The footnote must state the focal cell's value explicitly. scripts/verify-heatmap.py checks that the focal cell carries data-focal=\"true\" and that no non-focal cell uses accent fill."
+          ]
+        },
+        {
+          "title": "Declaring the values",
+          "items": [
+            "Binding — Without it",
+            "data-row on the data rect — A row cannot be identified during verification; a swapped row passes silently.",
+            "data-col on the data rect — A column cannot be identified; a shuffled column is invisible to the verifier.",
+            "data-value on the data rect — The fill cannot be verified as monotone; any opacity passes.",
+            "data-focal=\"true\" on the focal rect — The focal cell is counted as a non-focal cell with an unexplained accent fill."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "A hue per row or per column — hue is not a continuous variable; it maps \"which series\" (slopegraph contract), not \"how much\". The ramp carries quantity; the label carries category identity.",
@@ -1218,7 +1928,99 @@
         "web → internet",
         "legacy → server",
         "api → api",
-        "Any icon name from the built-in icon library works too — call `diagram_icons` for the index, then pass `names` for the markup."
+        "Any explicit icon name in the `diagram_icons` index is also accepted."
+      ],
+      "sections": [
+        {
+          "title": "Layout formulas — deterministic geometry",
+          "items": [
+            "First (leftmost): (x0,4) (x1-12,4) (x1,18) (x1-12,32) (x0,32)",
+            "Middle: (x0,4) (x1-12,4) (x1,18) (x1-12,32) (x0,32) (x0+12,18)",
+            "Last (rightmost): (x0,4) (effective_w,4) (effective_w,32) (x0,32) (x0+12,18)",
+            "Override applies to the polygon fill only. The label stays band-label; it never takes the active skin's paper.",
+            "The alternation index doesn't shift; neighboring chevrons keep their natural fill, even if it produces two adjacent same-fill chevrons. Don't try to \"fix\" this — overrides should be rare (≤ 2 per diagram).",
+            "In dark mode, use the same hex unless contrast against band-label falls below 4.5:1; if it does, pick a darker shade for dark mode and document it as a color_dark field on that chevron.",
+            "A chevron color override is independent of any paired component's color, but pairing them (same hex on chevron + bar) is the conventional way to make the column \"read\" as one concern.",
+            "Identity / Security — Keycloak, LDAP/AD, Okta, Auth0, OIDC providers",
+            "Observability — Prometheus + Grafana, Datadog, OpenTelemetry, Loki",
+            "Backup / DR — Velero, Restic, snapshot orchestrators",
+            "Governance / Lineage — OpenMetadata, DataHub, Apache Atlas",
+            "Secrets / config — Vault, Sealed Secrets, External Secrets",
+            "2 verticals (Orchestration + Security), 1 crosscut → heights = [192, 196], layout [40..232, 232..428].",
+            "3 verticals (Orchestration + Security + Observability), 2 crosscuts → strip_y_bot = 472, strip_h_total = 432, heights = [144, 144, 144], layout [40..184, 184..328, 328..472].",
+            "First (topmost): flat top, point at bottom — (strip_x, y0) (strip_x+strip_w, y0) (strip_x+strip_w, y1-12) (strip_x+strip_w/2, y1) (strip_x, y1-12)",
+            "Middle: notch on top, point on bottom — (strip_x, y0) (strip_x+strip_w/2, y0+12) (strip_x+strip_w, y0) (strip_x+strip_w, y1-12) (strip_x+strip_w/2, y1) (strip_x, y1-12)",
+            "Last (bottommost): notch on top, flat bottom — (strip_x, y0) (strip_x+strip_w/2, y0+12) (strip_x+strip_w, y0) (strip_x+strip_w, y1) (strip_x, y1)"
+          ]
+        },
+        {
+          "title": "Connector rules (mandatory)",
+          "items": [
+            "Orthogonal elbows, at most two bends per path.",
+            "Use a Q-bezier 8-px corner radius at every bend.",
+            "Z-order: draw all connectors before any node rectangle (so node fills mask the line ends).",
+            "Exactly one marker-end per <path> / <line>. Never both marker-start and marker-end.",
+            "Labels: every primary and secondary connector gets a label (small mono, opaque paper-filled rect mask behind). trigger and query connectors are unlabelled.",
+            "Avoid. Re-route via the chevron divider trunk (§4) before accepting a crossing.",
+            "If unavoidable, the path drawn second carries a 6-px arc hop over the first.",
+            "Never on the focal node. The focal node is already colored with the accent (§2.7). A color on the focal node is ignored — accent wins.",
+            "Never on source nodes. Sources live outside the cluster and stay neutral.",
+            "Cap at 2 custom-colored components per diagram (in addition to the focal). Three or more colored things erases the signal — the same reason §1 limits accent to 1–2 elements.",
+            "No color on connectors. If you find yourself wanting a colored edge, the right move is to pick a different style from §3, not to override.",
+            "#b85450 (rust-red) — Security / Identity (Keycloak, Vault)",
+            "#5a7d9a (slate-blue) — Observability (Prometheus, Datadog)",
+            "#7a8c47 (olive-green) — Governance / Lineage (OpenMetadata)",
+            "#8c6d3f (warm-brown) — Backup / DR"
+          ]
+        },
+        {
+          "title": "Block branching rules (fan-out)",
+          "items": [
+            "The single biggest reproducibility hazard. Fix these rules and the diagram becomes predictable.",
+            "### 4.1 Source fan-out (one source → N components)",
+            "Path per target: M exit_x,source_cy → H trunk_x → V target_cy → H target.left. Use Q-bezier corners.",
+            "### 4.2 Component fan-out (one component → N components)",
+            "Path per target: M exit_x,source_cy → H trunk_x → V target_cy → H target.left.",
+            "### 4.3 Fan-out cap",
+            "Max 3 outgoing edges per node. Above 3, introduce a hub (usually the focal node). The chevron banner is the legend; if a node is fanning out to four downstream targets, it's secretly the hub — make it explicit.",
+            "### 4.4 Bar drops (Airflow → N nodes)",
+            "Straight vertical line, style: trigger. One per target. No bends — bar drops never elbow.",
+            "### 4.5 Source vertical staggering",
+            "When multiple sources connect to the same single target (e.g. four sources → NiFi), stagger their entry y on the target:",
+            "This avoids overlapping arrowheads at the target's left edge.",
+            "---"
+          ]
+        },
+        {
+          "title": "Vertical chevrons — semantics",
+          "items": [
+            "Pairing rule (mandatory, 1:1): every vertical chevron pairs with exactly one cross-spanning component, and every cross-spanning component pairs with exactly one vertical chevron. The two component kinds that pair:",
+            "kind: bar — lives inside the cluster (top row). Conventionally paired with Orchestration.",
+            "kind: cross-cutting — lives below the cluster, one row per component. Paired with Security, Observability, Governance, etc.",
+            "Count constraint: len(verticals) == len(bars) + len(crosscuts). The right strip is split evenly among all verticals (§2.9), so visual alignment between a chevron and its bar/row is approximate — the label is what matters, not the y-pixel match.",
+            "Ordering convention: declare verticals top-down in the order: bar-paired first (Orchestration), then crosscut-paired in the same order the crosscuts appear below the cluster. This keeps the visual reading order consistent.",
+            "No edges: vertical chevrons emit no connectors themselves. They are labels for a column of cross-cutting concern.",
+            "No node placement: no kind: node may be assigned to a vertical chevron. Nodes always belong to a horizontal phase.",
+            "Right strip presence: if any vertical chevron exists, the right strip is reserved (effective_w = 964) and all horizontal chevron widths and cluster geometry shrink accordingly. Do not draw a vertical chevron on top of the cluster."
+          ]
+        },
+        {
+          "title": "Dark mode",
+          "items": [
+            "Element — Light",
+            "Muted text — muted",
+            "Dashed border — ink @ 0.20",
+            "Node fill — #ffffff (white)",
+            "Node stroke — ink @ 0.25",
+            "Focal fill — accent @ 0.08",
+            "Phase bands — band-1 / band-2",
+            "Token — Value",
+            "band-1 — #2d3142",
+            "band-2 — #3d4460",
+            "band-3 — #4a5270",
+            "band-label — #f5f5f5"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -1280,7 +2082,7 @@
         "components[i][k].id — globally unique slug; referenced by connectors[].from/to.",
         "components[i][k].name — node-name role (the human-readable label).",
         "components[i][k].sub — sublabel role at 10px in muted (the technical sub-label; up to 2 lines via auto-wrap when component height grows to 72).",
-        "components[i][k].icon — any name from the built-in icon library; take the index (and the `<svg>` markup) from `diagram_icons`. If missing → no icon, the name shifts left. (82 icons; there is no `mail` — use `file` for email hand-offs.)",
+        "components[i][k].icon — any id from the `diagram_icons` index. If missing → no icon, the name shifts left. (Catalog has 41 icons; mail is currently missing — use icon: file as fallback for email hand-offs.)",
         "components[i][k].kind — standard | focal | external. focal triggers the accent palette (§5); external switches to a 4-2 dashed stroke and muted ink to signal \"this is outside our scope.\"",
         "components[i][k].color — optional per-component color override (§4). Ignored on kind: focal (accent wins).",
         "connectors[k].from / connectors[k].to — refer to a component id. Cross-zone, cross-row, same-zone vertical, and same-zone horizontal all legal; routing chosen by §3.",
@@ -1290,6 +2092,96 @@
         "connectors[k].dashed — true | false.",
         "footer[k] — optional cross-cutting bar. Spans full canvas width minus margins. No connectors drawn from a footer.",
         "legend[k].swatch — link | accent | dashed | focal | neutral. Auto-curated based on what the diagram actually uses; user can re-order or rename."
+      ],
+      "sections": [
+        {
+          "title": "Layout formulas — deterministic geometry",
+          "items": [
+            "kind — Fill",
+            "standard — #FFFFFF",
+            "focal — accent @ 0.07",
+            "external — #FFFFFF"
+          ]
+        },
+        {
+          "title": "Connector rules (mandatory)",
+          "items": [
+            "Use {src_cy + 8} and V {dst_top} when destination lies BELOW source.",
+            "Use {src_cy − 8} and V {dst_bottom} when destination lies ABOVE source.",
+            "w = text_w + (icon ? 30: 12) — auto-fit.",
+            "Mask fill resolves to paper in light mode and ink in dark mode. The mask is kept as a safety pad — even though the label no longer sits on the line, it can graze zone backgrounds and component fills, and the mask preserves contrast.",
+            "stroke_color follows §3.4 (text + icon inherit the connector's accent / link / neutral color)."
+          ]
+        },
+        {
+          "title": "Component color override (per-component `color: \"#hex\"`)",
+          "items": [
+            "Never on focal components. kind: focal always renders accent; color is silently ignored.",
+            "Never on connectors. Connector style is topology-driven; if you want a colored edge, pick style: accent / link / neutral, not a component color.",
+            "Cap: ≤ 3 custom-colored components per diagram (in addition to focal components). Above 3 the visual signal fragments.",
+            "#b85450 rust-red — security / governance / pain-point that isn't focal",
+            "#5a7d9a slate-blue — observability / quality / monitoring gate",
+            "#7a8c47 olive-green — survivor system (the one tool the new platform keeps)",
+            "#c9a23a warm yellow — sandbox / dev / scratch",
+            "#8c6d3f warm-brown — archive / cold / DR"
+          ]
+        },
+        {
+          "title": "Focal rule",
+          "items": [
+            "kind: focal components: ≤ 2 per diagram (zero is also valid for diagrams without a single dominant pain-point).",
+            "Auto-styling: accent stroke 1.4, accent-tinted fill 7 %, ink-bold node-name, accent line-1 sublabel.",
+            "Any connector with a focal endpoint automatically renders in style: accent; the YAML style: is ignored.",
+            "Custom color: \"#hex\" on a focal component is silently ignored — accent always wins."
+          ]
+        },
+        {
+          "title": "Dark mode",
+          "items": [
+            "Role — Light",
+            "paper — paper",
+            "ink — ink",
+            "muted — muted",
+            "accent — accent",
+            "link — link",
+            "zone background — ink @ 0.02",
+            "zone border — ink @ 0.10",
+            "standard component fill — #FFFFFF",
+            "standard component stroke — ink",
+            "focal fill — accent @ 0.07",
+            "focal stroke — accent",
+            "external stroke — muted (dashed)",
+            "footer fill — ink @ 0.03",
+            "footer stroke — ink @ 0.18",
+            "label mask fill — paper",
+            "custom-color components — C"
+          ]
+        },
+        {
+          "title": "Reproducibility checklist (taste gate)",
+          "items": [
+            "Before emitting SVG, verify every item:",
+            "1. Eyebrow + title + subtitle present at canonical y-positions (24 / 36 / 52); body padding 32 px. 2. 2..4 zones; each has its uppercase label at the top-left of its zone box, on a paper-masked break in the border. 3. Every component has id, name. sub, icon, kind, color are optional. 4. ≤ 2 components with kind: focal; focal styling auto-applied (accent fill 7 %, accent stroke 1.4, italic line-1 sub). 5. Every connector exits the right (or bottom) of source and enters the top (or left) of destination; rounded right-angle Q-bezier r=8 at every bend; marker triangle visibly touches the destination rectangle edge. 6. Connector labels sit at the start of the connector (not mid-segment) and are offset perpendicular to the line (5 px gap above for horizontal segments, 6 px gap to the right for vertical segments) — never overlapping the stroke. Paper-fill mask kept behind text; icon (when icon: is set) sits left of text inside the same mask. 7. ≤ 3 custom-colored components; none on focal. 8. ≤ 3 footer bars; each spans viewBox_w − 2left_pad; no connectors emerge from any footer. 9. Legend at bottom: hairline separator + one swatch per style actually used. 10. arrow-label for connector labels, eyebrow for the page eyebrow and zone labels, title for the page title, node-name for the subtitle and component names, and sublabel for technical sub-labels. 11. Markers #arrow / #arrow-link / #arrow-accent defined once in <defs>; no inline marker definitions. 12. Dark variant: resolve every semantic token through its dark-mode value; custom colors are lightened ~15 %.",
+            "---"
+          ]
+        },
+        {
+          "title": "Worked YAML — full inputs for `example-it-state.html`",
+          "items": [
+            "n_zones = 3, components per zone = [3, 3, 3], custom color count = 1 (SQL Server), focal count = 2 (Shared Drive, LegacyPortal), external count = 2 (Civil Registry, Ministry Partners).",
+            "Zone widths in canonical: 256 / 360 / 272 ⇒ viewBox_w = 16 + 256 + 20 + 360 + 20 + 272 + 16 = 960 ✓",
+            "viewBox_h = 52 + 360 + 40 + 24 = 500 (no footer bars) ✓",
+            "Shared Drive (focal) at zone 2, row 0: x = 340, y = 80, w = 264, h = 68 (focal stretches to 68 to fit 2-line sub) ✓",
+            "LegacyPortal (focal) at zone 3, row 0: x = 704, y = 80, w = 208, h = 60 ✓",
+            "SQL Server (custom olive) at zone 2, row 2: container fill rgba(122,140,71,0.06), stroke rgba(122,140,71,0.45), name text #7a8c47 ✓",
+            "Connectors 4, 5 (within zone 2) and 7, 8 (within zone 3) are simple vertical <line> elements. Cross-zone connectors take rule-compliant routes (see SKILL.md §6 rules 4 & 5):",
+            "All three Survey-side → Shared Drive connectors (C1 / C2 / C3) enter Shared Drive's LEFT edge. A top-edge entry would push the marker body (7 px back along travel, given refX = 7) inside the destination box, where the box's paper-fill mask hides it — only a 1-pixel tip would peek above the stroke. Entering the left edge with a right-going path keeps the body outside the box and the arrow visible (~7 px shown to the left of the box edge). The three left-edge attach points are fanned at y = 108 / 124 / 140 (16-px spacing, well above the 12 px rule-4 minimum).",
+            "C1 (Survey → Shared Drive) source y matches landing y: single horizontal M 252,108 H 340. No bends needed.",
+            "C2 (ASP.NET → Shared Drive) detours up through zone-2 background — vertical at x = 316 (clear of Shared Drive's left edge at x = 340): H 308 Q 316,196 316,188 V 132 Q 316,124 324,124 H 340. Lands at (340, 124).",
+            "C3 (Civil Registry → Shared Drive) detours up through zone-2 background — vertical at x = 332 (clear of Analyst Machines, which starts at x = 340): H 324 Q 332,284 332,276 V 148 Q 332,140 340,140. Lands at (340, 140) via a final Q-bend (no trailing H needed).",
+            "（此处有截断）"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -1359,6 +2251,29 @@
         "Pain markers — on stages where sentiment drops, a small dashed-stroke tag box (rx=2, accent @ 0.50 stroke dashed 3,3, no fill or a faint accent tint) sits under that stage's actions cell, with an arrow-label-role 8px label naming the friction. Max 2 per diagram, and only on the trough — tagging every stage erases the signal.",
         "Legend — horizontal strip at the bottom per the global rule (hairline separator above, 160–180px between entries): three keys, in order — the sentiment line, the trough-stage highlight, and the pain-marker tag. The trough key is not optional: the dip is the finding, so the reader needs the highlight named."
       ],
+      "sections": [
+        {
+          "title": "Connector note",
+          "items": [
+            "The sentiment polyline is a data curve, not a connector between nodes — §6 rule 1 (mandatory orthogonal elbows) does not apply to it. This exemption covers the sentiment curve only; any other connector in a journey map (there normally are none) still follows the standard connector rules."
+          ]
+        },
+        {
+          "title": "Geometry",
+          "items": [
+            "Stage grid: left margin 64px, then 5 columns of 200px with 24px gutters (col_left = 64 + i·224).",
+            "Sentiment band: 160px tall. Hairlines at the top (HIGH), middle (NEUTRAL), and bottom (LOW) of the band, 80px apart.",
+            "Dot x = the horizontal center of its stage column. Dot y = the snapped level's hairline y (or the interpolated position for an unlabeled level).",
+            "Row height: enough for one line of text plus, in the ACTIONS row only, up to two stacked 16px-tall pain-marker boxes."
+          ]
+        },
+        {
+          "title": "Focal rule",
+          "items": [
+            "Exactly 2 accent elements: the trough dot + its incoming curve segment (counts as one), and its pain marker(s) (counts as the other). Nothing else on the map is accent."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "No sentiment curve. If every stage feels the same, or you can't name a feeling, you're drawing a process — use Process or Timeline.",
@@ -1417,8 +2332,20 @@
       "layout": [
         "Up to 5 vertical columns of equal width (240px), 32px gutters. Column background is ink @ 0.02; no column border.",
         "Header band per column: column name in the node-name role, 12px, weight 600, anchored left. A right-anchored WIP chip — a rectangular tag (rx=2, never a pill) holding n/limit in the eyebrow role at 8px — or bare n on a queue or terminal column, which carries no limit. Every in-process column states one. A hairline rule separator sits directly under the header band, full column width.",
-        "Cards: the §6 node-box pattern (`diagram_tokens` geometry) at rx=6, column width minus 16px padding on each side, 56px tall, 12px vertical gap between cards. Content: title in the node-name role, 12px, weight 600, and a sublabel-role 9px muted sublabel line for TICKET-ID · owner (e.g. AVA-214 · nadia).",
+        "Cards: the §6 node-box pattern (`diagram_tokens`) at rx=6, column width minus 16px padding on each side, 56px tall, 12px vertical gap between cards. Content: title in the node-name role, 12px, weight 600, and a sublabel-role 9px muted sublabel line for TICKET-ID · owner (e.g. AVA-214 · nadia).",
         "Drawing order: background → column fills → header text + WIP chips → header rules → cards (each: box, then left accent bar if blocked, then title, then sublabel) → legend."
+      ],
+      "sections": [
+        {
+          "title": "Card states — the type's semantic vocabulary",
+          "items": [
+            "State — Fill",
+            "default — white",
+            "blocked — accent @ 0.05",
+            "waiting / external — ink @ 0.02",
+            "done — ink @ 0.05"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -1531,8 +2458,26 @@
         "Lines: <polyline> with fill=\"none\". Focal series stroke-width=\"1.8\", others \"1.2\".",
         "Vertex dots: only on the focal series (r=4, filled). Other series: line only.",
         "Area fill (optional): <polygon> closing back to y=420 (x-axis baseline) at 0.08 opacity. Use for the focal series only when the area meaning is important.",
-        "Multi-series: up to 5 series. Focal = accent. Others = series-1, series-2, series-3, series-4 from the `diagram_tokens` series palette. Apply series palette in order — don't skip.",
+        "Multi-series: up to 5 series. Focal = accent. Others = series-1, series-2, series-3, series-4 from `diagram_tokens`. Apply series palette in order — don't skip.",
         "Legend: horizontal strip at the bottom. Swatch = 16×8px rect with the series fill/stroke. One entry per series."
+      ],
+      "sections": [
+        {
+          "title": "Variants",
+          "items": [
+            "Slopegraph: exactly two states, several series, read as slope and rank change. Full spec below. Its shared quantitative scale must be finite and nonzero; a flat value axis cannot encode distinct values.",
+            "Ridgeline: one distribution per series, stacked with deliberate overlap on one shared amplitude. Full spec below.",
+            "Streamgraph: many periods, few layers, read as a total and its composition breathing. Full spec below.",
+            "Bump chart: rank movement across 3–6 ordered snapshots, position only. Full spec below.",
+            "Two vertical axis rules, y 40 → 420 inside a 0 0 1000 500 viewBox, at x 320 and x 680. The plot sits inside x 40 → 956 with the rotated value-axis caption at x=24, as in the parent chart, and the legend keeps the house rhythm (rule at y=462, LEGEND at 478, key swatches at 492 with their text at 496), so a reader of bar, line or treemap finds it where they expect.",
+            "Keep the run narrower than the plot is tall. The 360px run against a 380px height puts the steepest shipped slope at 35° and the flattest at 4° — the spread you need before \"halved\" and \"barely moved\" look like different claims. Widening the run flattens every slope toward horizontal and throws away the comparison the type exists to make; the leftover width belongs to the label gutters, which need it.",
+            "Label gutters: on the left, names right-aligned ending at x=272 and values right-aligned ending at x=304; mirrored on the right from x=696 (values) and x=728 (names). Size the gutter to the longest name — a name that collides with the axis is the one thing here you cannot fix by moving a coordinate.",
+            "State captions in the eyebrow role at 9px, centred under each axis at y=440, tracked 0.14em.",
+            "Series count: 4–10 — deliberately more than the parent chart's cap of 5. That cap exists because eight-vertex polylines tangle in mid-plot; a slopegraph has no mid-plot, so what sets the ceiling here is endpoint labels colliding, not the lines. Below 4 a sentence or a pair of bars says it better.",
+            "No gridlines. Every endpoint prints its own value, so a gridline carries nothing the figure has not already said; the two axis rules are the scale. This is a real departure from the parent line chart, where the gridlines do the reading.",
+            "（此处有截断）"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -1580,6 +2525,71 @@
         "Budget (hard): 5–8 stations plus exactly one hub. Above 8 stations, split the subject into an overview Loop and one or more detail diagrams. Exactly one hub — a loop with two hubs is two diagrams. At most one station may set focal: true; zero is allowed when no editorial gate deserves emphasis.",
         "Station order is semantic. stations[0] is the top station, then entries proceed clockwise. The last station always connects back to station 0; if that return would be false, use a Flowchart instead.",
         "---"
+      ],
+      "sections": [
+        {
+          "title": "Layout math — deterministic geometry",
+          "items": [
+            "Use SVG coordinates, where positive y points downward. Let the hub center be C = (cx, cy), station count be N, station ring radius be R, station half-size be a = station_w/2, b = station_h/2, and hub half-size be A = hub_w/2, B = hub_h/2.",
+            "### 2.1 Station centers",
+            "For zero-indexed station k:",
+            "Thus station 1 sits at the top, and increasing k moves clockwise. Round station rectangles to the nearest 4px grid point after computing the ideal geometry; preserve symmetry when rounding paired stations. Keep ring-circle intersection points to three decimal places so every arc remains on the same circle.",
+            "### 2.2 Solid ring-flow endpoints",
+            "Ring connectors travel from station k to station j = (k + 1) mod N as circular SVG arcs on the station circle itself. Every segment uses the same center C, radius R, and clockwise sweep. The station boxes interrupt the circle; connectors begin at the circle's clockwise exit from the source box and end just before its counterclockwise entry into the destination box, so the marker tip lands on the destination stroke.",
+            "Find the circle/rectangle intersections against all four edges of station k. For vertical edge x = x_e:",
+            "Keep only candidates whose y lies within the edge. For horizontal edge y = y_e:",
+            "Keep only candidates whose x lies within the edge. The two surviving points are classified by their normalized polar angles around C:",
+            "Compensate for the marker tip before emitting the destination endpoint. With the canonical marker (refX=7, polygon tip at x=8) and ring stroke width 1.2, marker_overhang = 1.2:",
+            "The large-arc flag is 0 because adjacent-station gaps are less than 180 degrees; the sweep flag is always 1 for clockwise motion in SVG coordinates. The arrowhead overhang completes the final 1.2px to q_entry(j), landing on the box edge without crossing its stroke. The closing connector from station N-1 to station 0 uses the identical formula.",
+            "Loop's circular ring arcs are a documented type-specific exception to SKILL.md §6 rule 1, following the same precedent as Medallion's promotion arcs. A Loop never mixes cubic, straight, or rounded-orthogonal segments into its ring: the six visible gaps must read as pieces of one continuous circle.",
+            "### 2.3 Dashed write-back spoke endpoints",
+            "Each spoke runs inward from the station edge toward the hub. Use the same ray/box intersection formula, now on the radial vector u_k:",
+            "（此处有截断）"
+          ]
+        },
+        {
+          "title": "Visual grammar",
+          "items": [
+            "Element — Treatment",
+            "Station — Standard node: paper fill, ink stroke, radius-md; name in node-name, sublabel in sublabel",
+            "Hub — The one dark element: ink fill, paper text; slightly larger than a station",
+            "Focal station — At most one: accent-tint fill, accent stroke; station name may use accent",
+            "Ring flow — Circular A R R 0 0 1 arcs on the station circle, solid muted stroke, default arrowhead at the destination; clockwise only",
+            "Write-back spoke — Dashed soft stroke at reduced emphasis, stroke-dasharray=\"5,4\", with a soft arrowhead",
+            "Spoke label — arrow-label role, soft, uppercase, paper mask, 6–10px clear of the connector"
+          ]
+        },
+        {
+          "title": "Connector rules (mandatory)",
+          "items": [
+            "Ring arrows are same-radius circular arcs, solid, and clockwise. Every path uses A R R 0 0 1; destination markers land on station edges and no connector ends at a center point.",
+            "Spokes are dashed and point inward. A solid spoke destroys the visual distinction between operating flow and write-back.",
+            "Labels use opaque masks and maintain a visible 6–10px connector gap. Never place text on the stroke.",
+            "No ring connector or spoke may overlap another connector. Ring paths remain outside the hub; spokes occupy distinct radial routes.",
+            "When two spokes must leave the same station edge, fan their attach points by the §6 formula with at least 12px separation. The normal Loop has one spoke per station; use a second only when the semantics cannot be merged.",
+            "If a ring route would cross the hub, increase R or split the diagram. Do not thread flow through shared state or substitute an orthogonal route."
+          ]
+        },
+        {
+          "title": "Dark variant — token swap",
+          "items": [
+            "Role — Light",
+            "Canvas and station fill — paper",
+            "Primary text and station stroke — ink",
+            "Hub fill / hub text — ink / paper",
+            "Ring flow — muted",
+            "Write-back spokes and labels — soft",
+            "Focal fill / stroke — accent-tint / accent",
+            "Rule and dot grid — rule"
+          ]
+        },
+        {
+          "title": "Reproducibility checklist",
+          "items": [
+            "1. Station count is 5–8 and hub count is exactly one. 2. Station 0 is at -90deg; all others use equal 360/N steps clockwise. 3. Every solid ring arrow connects adjacent stations with A R R 0 0 1, using the same R; the last returns to the first. 4. Every ring marker lands on a station edge, not its center. 5. Every dashed spoke begins on a station's inner edge and stops marker_gap before the hub stroke. 6. Ring connectors stay outside the hub; spokes do not cross or overlap. 7. At most one station uses accent-tint + accent; the hub alone uses the dark ink fill. 8. Spoke labels, if present, use arrow-label, an opaque mask, and a 6–10px gap. 9. The viewBox includes station boxes, strokes, curves, markers, and margins without clipping.",
+            "---"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -1638,6 +2648,92 @@
         "promotions[].style — normal | focal | lifecycle. The connector rule (§3) binds each style to fixed stroke / dash / marker.",
         "paths — 0–2 entries. When 0 entries, the bottom row is omitted and viewBox_h shrinks accordingly."
       ],
+      "sections": [
+        {
+          "title": "Layout formulas — deterministic geometry",
+          "items": [
+            "0→1: M 102,80 C 102,0 290,0 290,80",
+            "1→2: M 290,80 C 290,0 478,0 478,80",
+            "2→3: M 478,80 C 478,0 666,0 666,80 (focal — accent)",
+            "3→4: M 666,80 C 666,0 854,0 854,80 (lifecycle — dashed)",
+            "If promotions[k].to references the focal tier, the style auto-promotes to focal (accent, width 1.6, arrow-accent marker).",
+            "If promotions[k].to references a tier with a color override (§4), the arrow inherits that hex — stroke = C, label fill = C, marker-end uses a color-matched marker (e.g., arrow-yellow for #c9a23a). Width stays at 1.4 — the color override is a \"concern\" signal, not a focal promotion. Lifecycle/dashed arrows keep their dash but adopt the color.",
+            "Focal wins if both apply (a colored tier marked focal still uses accent).",
+            "Anchored at (arc_peak_x(k), arc_label_y) = ((arc_src_x + arc_dst_x) / 2, 50).",
+            "arrow-label role at 10px with letter-spacing=0.08em, uppercase. Color matches the arrow stroke.",
+            "No mask rect needed — the cubic curve peaks at y ≈ 20 and the label sits at y=50, well below the curve. The label floats inside the open space enclosed by the arc, reading \"X transforms into Y\" with the arc itself as the visual frame.",
+            "Container rect: white fill, ink @ 0.20 stroke width 1, rx=6.",
+            "Tag chip: rect at (path_x + 8, path_y + 6), h=12 rx=2, fill transparent, stroke ink @ 0.30 width 0.8. Tag text centered inside in the eyebrow role with letter-spacing 0.08em, ink.",
+            "Title at (path_x + 80, path_y + 30): node-name role at 11px, ink.",
+            "Sub at (path_x + 80, path_y + 46): sublabel role, muted."
+          ]
+        },
+        {
+          "title": "Connector rules (mandatory)",
+          "items": [
+            "Three styles, bound to topology. Mirror §3 of the `process` type so the rule reads identically.",
+            "Add a new <marker> for each color override used in the diagram. Naming convention: arrow-{semantic} (e.g., arrow-yellow, arrow-slate, arrow-red) — matches the recommended palette so the marker id reads cleanly in source.",
+            "Z-order: promotion arcs draw before any tier card rect, so the cards layer on top and any arc overshoot is masked inside the cards.",
+            "Arc shape rule: medallion promotions are always cubic arcs over the top of the tier strip, anchored at the top-center of source and target tiers; control points directly above anchors at y=0. No horizontal \"through the gap\" lines — the arc-over-top is what makes connector + label both clearly visible.",
+            "---"
+          ]
+        },
+        {
+          "title": "Component color override",
+          "items": [
+            "Never on focal tiers. The accent already carries that signal — a color on the focal tier is ignored.",
+            "Never on the cold tier in addition to its dashed treatment. Pick either dashed-cold or a custom color, not both.",
+            "Cap at 2 custom-colored elements per diagram (tier or path), in addition to the focal tier.",
+            "Promotion arrows inherit the target tier's color (§3 auto-style rule). A color: \"#c9a23a\" on the Staging tier means the CLEAN+WEIGHT arc landing in Staging is also rendered in yellow — connector, label, and arrowhead match. This keeps visual coherence: the colored tier and its incoming flow read as a single \"concern\" group. Arrows do not inherit color from the source tier — only the target — so the arc out of a colored tier reverts to muted (or to the next target's color/style).",
+            "#b85450 rust-red — Security / Identity / Governance (PII-bearing tiers, audit tiers)",
+            "#5a7d9a slate-blue — Observability / Quality (validated tiers, monitored zones)",
+            "#7a8c47 olive-green — Data Products / Publication (consumer-facing aggregates, public-release tiers)",
+            "#c9a23a warm yellow / gold — Analytical / Working zones (staging tier, scientist sandbox, intermediate computation surface)",
+            "#8c6d3f warm-brown — Backup / DR / Archive (alternative cold-tier styling)"
+          ]
+        },
+        {
+          "title": "Focal rule",
+          "items": [
+            "Uses style: focal (accent fill + stroke 1.6 + accent header band).",
+            "Renders bucket text and example-value lines in accent.",
+            "Has its incoming promotion arrow auto-promoted to style: focal (accent).",
+            "Has its outgoing promotion arrow (if any) — typically into the cold archive — kept at the user-declared style (usually lifecycle dashed)."
+          ]
+        },
+        {
+          "title": "Dark mode",
+          "items": [
+            "Token — Light",
+            "Paper — paper",
+            "Ink — ink",
+            "Muted — muted",
+            "Accent — accent",
+            "Fog (cold tier fill) — paper-2",
+            "White (default card fill) — #FFFFFF",
+            "Card stroke ink (default style) — ink",
+            "Header band ink-tint — ink @ 0.06",
+            "Header band muted-tint — muted @ 0.10",
+            "Header band cold-tint — muted @ 0.18",
+            "Header band accent-tint — accent @ 0.14",
+            "Custom component colors — C"
+          ]
+        },
+        {
+          "title": "Reproducibility checklist (taste gate)",
+          "items": [
+            "Before emitting SVG, verify every item:",
+            "1. viewBox = \"0 0 {viewBox_w} {viewBox_h}\" derived via §2 (5 tiers + 2 paths → 1040 × 548). 2. Each tier card at (tier_x(i), 80) size 172 × 380, rx=6. 3. Tier header band fills (tier_x(i), 80, 172, 40) plus a 10-px extension under the band. 4. Exactly one focal tier; its incoming arc auto-styled to focal. 5. Promotion arcs render as cubic Béziers over the top of adjacent tiers; anchors at (tier_cx(i), 80) → (tier_cx(i+1), 80), controls at y=0. Label inside the arc at (arc_peak_x, 50), no mask. 6. Bottom path row only present when len(paths) > 0. Cards at y=476, height 56. 7. Custom component colors ≤ 2 in addition to the focal tier. Never on arrows. 8. All promotion arrows + label masks emitted before any tier rect (z-order rule — cards mask the line ends inside the cards). 9. The focal tier's bucket text and example values render in accent; the rest stay muted. 10. rx=6 on every tier and path card; rx=2 on tag chips.",
+            "---"
+          ]
+        },
+        {
+          "title": "Worked YAML",
+          "items": [
+            "The YAML in §1 is the complete inputs definition for the shipped example-medallion.html. Every coordinate in that file's SVG is derivable from §2 applied to those inputs. The same YAML is embedded as a top-of-file HTML comment inside example-medallion.html so source view shows the parametric inputs immediately above the SVG."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "More than one focal tier — focal exists to mark the central analytical surface; >1 erases the signal.",
@@ -1690,7 +2786,7 @@
         "Stroke hierarchy: outer rings faint (rgba(..,0.30–0.45)), progressing to muted, to ink, to coral at the innermost focal.",
         "Fills step up in opacity from outer to inner: rgba(..,0.015) → rgba(..,0.025) → accent-tint on the innermost.",
         "Optional file-icon glyph (folded-corner rect) inside each level hints at scope content.",
-        "Italic callout-role asides (callout 角色见 `diagram_tokens` 的 typography) — 1–2 max."
+        "Italic callout-role asides (callout role; see `diagram_tokens`) — 1–2 max."
       ],
       "antiPatterns": [
         {
@@ -1734,6 +2830,18 @@
         "Each node should answer three questions when space allows:",
         "Show non-Slack / not-yet-live owners with dashed optional styling rather than hiding them. Missing routes are operationally important.",
         "Put escalation / approval rules in a small side callout or footer strip, not as extra org nodes."
+      ],
+      "sections": [
+        {
+          "title": "Node treatments",
+          "items": [
+            "Front door / command center: focal treatment (accent-tint + accent).",
+            "Team / pod / department: backend treatment (white + ink).",
+            "Individual agent / owner: store or external treatment depending on whether it is active in the system.",
+            "Gap / needs setup: optional dashed treatment.",
+            "Approval gate: security treatment, separate from reporting hierarchy."
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -1811,6 +2919,61 @@
         "multiple series, negative values, logarithmic scales, unequal sector angles, and more than eight categories;",
         "animation or interaction."
       ],
+      "sections": [
+        {
+          "title": "Input contract",
+          "items": [
+            "Validation rules:",
+            "1. scale.min is exactly 0; truncated radial scales are invalid. 2. scale.max is finite and greater than 0. 3. Every value is finite and satisfies 0 <= value <= scale.max. 4. Category labels are unique after trimming and category count is 4–8. 5. At most one category is focal. 6. Categories retain input order; sorting by value would destroy circular meaning.",
+            "Missing values are out of scope for the first version. The agent must stop and ask whether to omit the category or supply a value; it must not coerce missing data to zero."
+          ]
+        },
+        {
+          "title": "Quantitative encoding",
+          "items": [
+            "For category i of N, value v, center (cx, cy), and outer radius R:",
+            "Angles are expressed in radians for calculation; start_angle is supplied in degrees and defaults to -90, placing the first category at twelve o'clock. clockwise_sign is +1 for the default clockwise order and -1 otherwise.",
+            "The value ray is the line segment from (cx, cy) to (x_i, y_i). Its visible length is exactly proportional to v. Endpoint circles have constant radius and encode no additional quantity. No filled sector may sit behind or beneath a value ray, because its area would compete with the declared radius encoding.",
+            "The element carrying data-polar-chart must be the chart's root <svg>. Its descendants are limited to <g>, <line>, <circle>, <rect>, <text>, <title>, and <desc>; nested SVGs, paths, polygons, external references, images, and every other element are rejected. Duplicate attributes, mismatched markup, URL-valued SVG references, transforms, CSS loading through @import/url, and geometry-affecting CSS are forbidden. Chart elements carry neither class nor inline style; document styles may not use selectors capable of matching the chart, except the canonical root svg layout rule. The only external stylesheet allowed is Google Fonts. Every line carries exactly one of data-polar-spoke, data-polar-ray, or data-polar-rule and uses the role's declared stroke width; spoke and ray geometry is verified within min(0.75 px, 5% of R). The five grid circles carry data-polar-ring, use fill=\"none\", a 0.8 px stroke, the chart center, and the 20% through 100% radius intervals exactly once. Every endpoint circle carries data-polar-marker and uses the declared 4 px radius, or 5 px for the focal category, with a 1.2 px stroke. The optional full-canvas background is the only rectangle and carries data-polar-background. This fail-closed allowlist prevents contributors from bypassing the radius-only encoding with an unannotated or falsely annotated filled shape.",
+            "### Zero",
+            "For v = 0, radius_i = 0. Render no value ray and no endpoint marker. Keep the faint full-radius category spoke, and render the category's numeric label as 0. A single scale label at the center also marks the shared zero baseline. Do not add a minimum hub, minimum ray length, displaced marker, or other visible magnitude."
+          ]
+        },
+        {
+          "title": "Geometry",
+          "items": [
+            "Grid rings: r = 32, 64, 96, 128, 160.",
+            "Category spokes: center to R, 0.8 px rule stroke, no arrowhead.",
+            "Non-focal value rays: 2 px muted stroke; endpoint marker radius 4.",
+            "Focal value ray: 2.4 px accent stroke; endpoint marker radius 5.",
+            "Ring labels: 0.2 × max through 1.0 × max on the first axis only, arrow-label role 8 px; the example therefore shows 20, 40, 60, 80, 100.",
+            "Category labels: at R + 28, node-name role 11 px semibold, horizontal and upright.",
+            "Numeric labels: at R + 44, arrow-label role 8 px, including the unit in the chart subtitle rather than repeating it eight times.",
+            "Label anchor: middle within 15 degrees of vertical, start on the right half, and end on the left half.",
+            "Drawing order: background, rings, spokes, scale labels, non-focal rays, focal ray, endpoint markers, category labels, numeric labels, legend/source note."
+          ]
+        },
+        {
+          "title": "Visual treatment",
+          "items": [
+            "One accent category maximum. All other value rays use the muted token.",
+            "Circular rings and spokes are structural grid marks, never category colors.",
+            "Endpoint markers are constant-size lollipop heads, not bubbles.",
+            "Category labels remain horizontal; tangent rotation is intentionally excluded because it lowers scanability and belongs to the rejected qualitative wheel direction.",
+            "The chart must remain understandable in grayscale: position and numeric labels carry the data; accent only directs attention.",
+            "The SVG accessible description names the peak category, the scale, and the clockwise category order without narrating geometry."
+          ]
+        },
+        {
+          "title": "When not to use",
+          "items": [
+            "Multiple series → use Radar.",
+            "Non-cyclic categories → use Bar.",
+            "More than eight ordered time buckets → use Line.",
+            "Qualitative profiles, arbitrary sector placement, negative values, or logarithmic scales → choose a truthful non-polar representation."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "Donut hubs or any non-zero inner baseline.",
@@ -1885,6 +3048,100 @@
         "nodes[i].focal: true — exactly one node may declare this. Renders with accent border (§5).",
         "nodes[i].chips — {in: \"<CODE>\", out: \"<CODE>\"} object (either side null to omit). Codes from §8. Skip the input chip on the first step's nodes, skip the output chip on the last step's nodes (no upstream / downstream).",
         "nodes[i].color — optional per-node color override. Any valid \"#hex\" string; the §4 palette is recommended for cross-diagram consistency."
+      ],
+      "sections": [
+        {
+          "title": "Layout formulas — deterministic geometry",
+          "items": [
+            "Paper fill across full viewBox.",
+            "Dot pattern: 22×22 grid, circle r=0.8, fill ink @ 0.10. Opacity 0.55.",
+            "Alternating lane tints: odd-indexed lanes (0, 2, …) receive ink @ 0.018 fill from x=140 to viewBox_w.",
+            "Lane dividers: horizontal hairlines at every lane_y_top(k) and at legend_y_top; stroke ink @ 0.12 width 0.8.",
+            "Label column right border: vertical hairline at x = label_col_w, stroke ink @ 0.20 width 1, from y = header_h to y = legend_y_top.",
+            "Default fill: ink @ 0.12, number text ink.",
+            "Focal fill: accent @ 0.20, number text accent (§5).",
+            "Per-step color override (§4): replaces the fill with rgba(C, 0.20) and the number fill with C.",
+            "Renders steps[j].label (uppercased), anchored at label_anchor.",
+            "Font: the eyebrow role's mono family at 6 px, weight 500, letter-spacing=\"0.12em\", text-anchor=\"middle\".",
+            "Default fill: muted.",
+            "Focal fill: accent.",
+            "Per-step color override: fill = C (matches the chip number color).",
+            "Keep labels short (≤ 9 chars). Long labels truncate; if you need more, abbreviate.",
+            "Single-line: anchored at (lane_label_x, lane_y_mid(k) + 4)",
+            "Two-line: lines at (lane_label_x, lane_y_mid(k) - 4) and (lane_label_x, lane_y_mid(k) + 4)"
+          ]
+        },
+        {
+          "title": "Connector rules (mandatory)",
+          "items": [
+            "Source-side: exit at (node_x + 100, lane_y_mid(src_lane)) — node's right edge, vertical center.",
+            "Destination-side: enter at (step_cx(dst_step), node_y(dst_lane)) for downward, or (step_cx(dst_step), node_y(dst_lane) + 64) for upward.",
+            "Corner radius: 8-px Q-bezier at the bend.",
+            "Same-lane edges (rare — same lane, adjacent steps): horizontal <line> from src right to dst left.",
+            "No diagonals. No left-side entry. No exit from the top/bottom of a node.",
+            "Z-order: all <path> and <line> connectors emitted before any node <rect>.",
+            "Markers: exactly one marker-end per path. Never marker-start.",
+            "Labels: all process arrows are unlabelled by default. The step number + the actor lane carry the semantic; a label on every arrow is noise. Only label an arrow if it represents a non-step concept (re-test loop, escalation) — then use a paper-masked rect behind 6.5-px mono text."
+          ]
+        },
+        {
+          "title": "Component color override",
+          "items": [
+            "Never on focal nodes / focal steps. The accent already carries that signal. A color on a focal element is ignored.",
+            "Never on arrows. Arrows are topology-driven. If you want a colored edge, pick a different style from §3, not a color override.",
+            "Cap at 3 custom-colored elements per diagram (nodes + lanes + steps combined), in addition to the focal pair (focal node + focal step header). Above 3 the visual signal starts to fragment.",
+            "Subtitle and tool labels stay muted regardless of any component color.",
+            "#b85450 rust-red — Security / Identity / Governance (access control, training, approvals)",
+            "#5a7d9a slate-blue — Observability / Quality (data quality gates, validation, monitoring)",
+            "#7a8c47 olive-green — Data Products / Publication (consumer-ready outputs, releases)",
+            "#8c6d3f warm-brown — Backup / DR / Archive"
+          ]
+        },
+        {
+          "title": "Focal rule",
+          "items": [
+            "One focal step (steps[j].focal: true) — typically the analytical or decision pivot (Test, Approve, Validate). Header chip and legend chip render in accent.",
+            "One focal node (nodes[i].focal: true) — the node that receives the critical handoff. Accent border + accent role chip + ink title (title text stays ink so it's still readable; only the border + role chip carry the accent).",
+            "One focal arrow set (style: focal-in and focal-out) — edges into and out of the focal node. Accent solid strokes."
+          ]
+        },
+        {
+          "title": "Dark mode",
+          "items": [
+            "Element — Light",
+            "Lane tint — ink @ 0.018",
+            "Label col divider — ink @ 0.20",
+            "Focal chip fill — accent @ 0.20",
+            "Focal node fill — accent @ 0.08",
+            "Default node fill — #ffffff (white)",
+            "Default node stroke — ink @ 0.25"
+          ]
+        },
+        {
+          "title": "Reproducibility checklist (taste gate)",
+          "items": [
+            "Before emitting SVG, verify every item:",
+            "1. viewBox = \"0 0 {viewBox_w} {viewBox_h}\" derived via §2. 2. Header strip at y=0..36; legend strip at y=legend_y_top..viewBox_h (legend_y_top = 36 + n_lanes 80). 3. Every node at (step_cx(j) - 50, lane_y_top(k) + 8) size 100×64. 4. Empty cells render nothing — no placeholder rect, no text. 5. Exactly one focal step (steps[j].focal: true). 6. Exactly one focal node (nodes[i].focal: true). 7. Focal-touching arrows use style: focal-in / focal-out (accent). 8. All other arrows style: normal (muted solid) or style: trigger (muted dashed). Unlabelled by default. 9. All arrows emitted before any node rect (z-order rule). 10. Single-bend right-angle routing only — exit right, enter top/bottom. No diagonals. Q-bezier r=8 at each bend. 11. Custom component colors ≤ 3 (in addition to the focal pair). Arrows never recolored by component color. 12. Subtitle and tool labels stay muted regardless of any component color. Input chip skipped on first step's nodes, output chip skipped on last step's nodes.",
+            "---"
+          ]
+        },
+        {
+          "title": "Data-type chips reference (input + output)",
+          "items": [
+            "Input chip at (node_x+4, node_y+54) — bottom-left. Payload entering the node.",
+            "Output chip at (node_x+80, node_y+54) — bottom-right. Payload leaving the node.",
+            "Either chip may be omitted (first/last step, unknown payload)."
+          ]
+        },
+        {
+          "title": "Legend (3- or 4-row strip)",
+          "items": [
+            "Row 1 — STEPS at y = legend_y_top + 16: repeat the header chips with their labels. Focal step keeps accent fill.",
+            "Row 2 — DATA TYPE at y = legend_y_top + 37: one swatch per chip type actually used in the diagram. Append a small sub-hint in muted mono: left chip = input · right chip = output.",
+            "Row 3 — CONCERN (only when color overrides are present) at y = legend_y_top + 58: one mini-rect per custom color used, with its semantic label.",
+            "Row 4 — FLOW (position depends on whether CONCERN row exists): one segment per arrow style actually used, with marker + label."
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -1990,6 +3247,15 @@
         "Coral on ONE layer only: apex of pyramid, conversion layer of funnel, or critical bottleneck.",
         "Optional left-margin axis arrow + eyebrow-role label (rarer ↑, drop-off ↓)."
       ],
+      "sections": [
+        {
+          "title": "Two orientations — pick one",
+          "items": [
+            "Pyramid (point up) — narrow apex = most important / rarest / most valuable. Base is broadest / foundational.",
+            "Funnel (point down) — narrow end = conversion (smallest group). Top is widest / audience."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "7+ layers (illegible — compress or split).",
@@ -2033,6 +3299,34 @@
         "Coral on the \"do first\" item (typically top-right).",
         "Limit to ~12 items; cluster or split beyond that."
       ],
+      "sections": [
+        {
+          "title": "Consultant special (2×2 scenario matrix)",
+          "items": [
+            "Paper / bg / pattern: defaults from `diagram_tokens` (paper, 22×22 dot pattern at 10% ink).",
+            "Axis lines: ink, stroke-width: 1.2, marker-start + marker-end both pointing outward.",
+            "Focal quadrant tint: accent @ 0.04 full rect behind the focal cell.",
+            "Focal cell: accent-tint fill, accent stroke at 1.2px. Corner tag in accent, weight 600.",
+            "Non-focal cells: store treatment (ink @ 0.04 fill, muted @ 0.28 stroke).",
+            "Cell title: node-name role, 16px, weight 600, ink.",
+            "Cell description: node-name role, 11px, muted, 1–3 lines, left-aligned inside the cell.",
+            "Corner tag: eyebrow role, 8px, uppercase, tracked 0.18em, muted (or accent on focal). Format: NN · DIMENSION-A / DIMENSION-B — the two axis-dimension words must match the axis labels exactly.",
+            "Axis labels: eyebrow role 9px regular weight (not bold), tracked 0.18em, uppercase, ink. One word per tip. No arrow glyphs in the label, no HIGH / LOW parentheticals, no multi-line sublabels. The word itself is the label. Position labels beyond the arrow tips (not on the axis line):",
+            "Top tip: text-anchor=\"middle\", ~12px above the arrow tip",
+            "Bottom tip: text-anchor=\"middle\", ~20px below the arrow tip",
+            "Left tip: text-anchor=\"end\", ~12px left of the arrow tip, dominant-baseline=\"middle\"",
+            "Right tip: text-anchor=\"start\", ~12px right of the arrow tip, dominant-baseline=\"middle\"",
+            "Four cells, equal size (240×160 or 280×180 are good defaults), arranged with a 40–60px gap from the axis cross.",
+            "Axis cross passes between the cells, not through them.",
+            "Arrow tips live ~20–40px outside the outermost cell edge; single-word axis labels sit ~12px beyond each tip (see Axis labels above).",
+            "Exactly one focal cell. Picking none makes it a placeholder template; picking two erases the signal.",
+            "Keep the legend strip + horizontal rule at the bottom — same as the standard quadrant. Legend swatches should show both \"headline bet\" (coral) and \"candidate future\" (neutral).",
+            "Plain white background — the warm paper + dot pattern is load-bearing across the skill; dropping it to \"look consultant\" turns the diagram generic.",
+            "Sans-serif H1 — keep the title role's serif for the page title. The title/diagram contrast is the house signature.",
+            "（此处有截断）"
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "Four filled quadrants in different colors — position + label does the work; color noise weakens it.",
@@ -2073,6 +3367,31 @@
         "Vertex dots: only on the focal series, r=4 filled with the series color. Non-focal series are stroke-and-fill only. This is the load-bearing rule that keeps the chart readable at 4–5 series.",
         "Drawing order: dots-pattern bg → grid rings → axis spokes → axis labels → scale ticks → non-focal series (smallest area first) → focal series → focal vertex dots → legend.",
         "Legend: horizontal strip at the bottom (per the global rule). Swatch is a 16×8 rectangle (matches the polygon stroke+fill, not a circle), then the entity name. ~140px between entries. Optional italic tail on the right with the rationale (\"One coral. Position is the signal — color reserved for the recommended option.\")."
+      ],
+      "sections": [
+        {
+          "title": "Math",
+          "items": [
+            "Fraction f — i=0 (top)",
+            "0.2 — 500,208",
+            "0.4 — 500,176",
+            "0.6 — 500,144",
+            "0.8 — 500,112",
+            "1.0 — 500,80"
+          ]
+        },
+        {
+          "title": "Series palette",
+          "items": [
+            "Slot — Token",
+            "Focal — accent",
+            "1 — series-1",
+            "2 — series-2",
+            "3 — series-3",
+            "4 — series-4",
+            "5 — series-5"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -2136,6 +3455,22 @@
         "Column headers: eyebrow role 8px, uppercase, tracked, centered above each column — \"CI COMPUTE BUDGET / TEST STAGE / OUTCOME\" style eyebrows, not full sentences.",
         "Drawing order: background → column headers → ordinary ribbons → the accent path's ribbon(s) (painted last among ribbons so they read on top) → node bars → node labels → legend.",
         "Legend: horizontal strip at the bottom per the global rule, viewBox extended ~60–100px to fit it (a Sankey's ribbons need more bottom clearance than a typical diagram because node stacks run tall). Swatches are 16×8 rectangles matching each ribbon treatment, plus an optional italic aside stating the editorial read."
+      ],
+      "sections": [
+        {
+          "title": "Scale rule",
+          "items": [
+            "Node — Quantity",
+            "CI minutes (col 1) — 12,000",
+            "Unit tests — 5,200",
+            "E2E — 4,000",
+            "Build — 2,000",
+            "Lint — 800",
+            "Passed — 9,400",
+            "Failed — 1,600",
+            "Flaked — 1,000"
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -2464,6 +3799,33 @@
         "Coral on the primary success response or headline message — one, maybe two. Actor focal strokes do not count toward the coral message budget.",
         "When the flow branches (valid vs invalid token, retry, optional step), draw a combined fragment frame — do not invent free-floating if/else arrow clusters."
       ],
+      "sections": [
+        {
+          "title": "Combined fragments (`alt` / `opt` / `loop`)",
+          "items": [
+            "Frame left/right inset ≥12px from the outermost participating lifeline centers (so activation bars stay inside the frame).",
+            "≥24px between consecutive message y-levels inside a region (4px grid).",
+            "Guard sits in the first ~20px under the tab; first message in that region is ≥24px below the guard baseline.",
+            "Divider y on the 4px grid; ≥16px clear of messages above and below.",
+            "Nested fragments: max 1 level. Prefer two separate diagrams over deep nesting.",
+            "Default: one fragment per diagram. A second only if both stay under the complexity budget.",
+            "Coral stays on one headline success message across the whole diagram (usually the happy-path return inside the first alt region, or the final success outside a loop). Do not coral both alt branches.",
+            "par, critical, break, ref, and other UML operators — second PR if needed.",
+            "Participant create/destroy, found/lost messages, duration timing bars."
+          ]
+        },
+        {
+          "title": "Complexity budget (sequence-specific)",
+          "items": [
+            "Max lifelines: 5 (same as the per-type budget table in `diagram_types`).",
+            "Max messages (arrows): 12.",
+            "Max combined fragments: 1 (hard default); 2 only if each is a single-region opt/loop.",
+            "Max alt regions: 2.",
+            "Max fragment nesting depth: 1.",
+            "Max coral elements: 2 (prefer 1 for fragment diagrams)."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "Message arrow pointing upward (reverses time — never).",
@@ -2512,7 +3874,7 @@
       ],
       "budget": [
         {
-          "head": "Max lifelines: 5 (same as the budget table in `diagram_tokens`).",
+          "head": "Max lifelines: 5 (same as the per-type budget table in `diagram_types`).",
           "body": ""
         },
         {
@@ -2623,6 +3985,17 @@
         "Focal cell (≤1, optional): the failure, wait, or handoff the figure exists to show — usually on or below the visibility line. Accent fill rgba(191,69,32,0.12) (dark: rgba(240,138,89,0.18)), accent stroke, data-focal=\"true\".",
         "Legend: horizontal strip after a hairline rule, three keys in this order — visibility line, backstage layer, focal cell."
       ],
+      "sections": [
+        {
+          "title": "Honesty rules",
+          "items": [
+            "The grid is a census, not a flow chart. Stage order is the sequence. Wait times and system names are cell text, not edges.",
+            "Required layers are complete. Every stage has a customer cell, a frontstage cell, and a backstage cell. An empty slot still occupies its column and says so.",
+            "The visibility line is checkable. It spans the plot, sits in the frontstage/backstage gap, and its stroke clears 3:1 against paper.",
+            "Printed text matches data-name. A cell that draws \"Retry payment\" and declares another action is two stories."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "No visibility line, or a line that sits in the wrong gap (not between frontstage and backstage). Without the line this is just a table of rows.",
@@ -2677,6 +4050,16 @@
         "Orient along the dominant flow direction (left→right or top→down); rearrange before crossing transitions.",
         "Coral on the state the reader should notice — typically the error state, or \"happy completion\"."
       ],
+      "sections": [
+        {
+          "title": "Routing distinctions",
+          "items": [
+            "Use Sequence for time-ordered messages between actors, including request/message lifecycles.",
+            "Use ordinary State Machine for dense transition logic where events, guards, and legal transitions dominate.",
+            "Use the Lifecycle phase map semantic pattern for one subject moving through 4–5 primary phases with separate wait/recovery and terminal-outcome bands."
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "More transitions than states × 2 → likely two state machines.",
@@ -2709,6 +4092,14 @@
       "layout": [
         "Vertical stack, top to bottom:",
         "1. Backbone — up to 5 activities in left-to-right narrative order, as wide header cards (200px, rx=6, ink @ 0.05 fill, muted stroke). Each card: the activity name in the node-name role, 12px, weight 600, above an eyebrow-role 8px uppercase tracked eyebrow (ACTIVITY 1 … ACTIVITY 5). 24px gutters between cards. 2. Walking skeleton row — directly under each activity, its user steps as smaller cards (rx=4, 32px tall, white fill, ink stroke), node-name family 12px. One or two per activity; reserve room for two so every activity's row bottom aligns even when it only has one step. 3. Release slices — horizontal bands below the skeleton row, each a full-width lane with an eyebrow-role 8px uppercase tracked label (MVP, RELEASE 2, LATER) sitting in a 96px left margin. Band background alternates ink @ 0.02 / none. Inside each band, story cards (rx=4, 48px tall) sit in their activity's column: story title in the node-name role, 12px, weight 600, plus a sublabel-role 9px estimate/ticket sublabel (e.g. RPT-114 · 3pt). Whenever any slice has a gap (an activity with no card in that row), add rule hairline column separators (0.8px, dashed 4,4, 0.10 opacity) running from just under the backbone down to the bottom of the last slice, drawn before the cards — without them, a gappy grid reads as scattered rather than mapped to its activity. 4. The release cut line — a full-width horizontal accent rule (1.5px) immediately under the MVP band, with a masked arrow-label-role 8px label RELEASE CUT at its right end. This is accent element one. 5. Legend — horizontal strip at the bottom per the global rule (hairline separator above): one swatch for the default story card, one for the highest-risk treatment, one for the release-cut line."
+      ],
+      "sections": [
+        {
+          "title": "Focal rule",
+          "items": [
+            "Exactly 2 accent elements: the release cut line with its RELEASE CUT label (counts as one), and the single riskiest story card — drawn with accent @ 0.05 fill, accent dashed 4,4 stroke, and a small rectangular RISK tag (rx=2, matching the type-tag primitive) — counts as the other. Nothing else on the map is accent."
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -2835,7 +4226,7 @@
     {
       "id": "tree",
       "title": "Tree / Hierarchy",
-      "bestFor": "org charts, dependency trees, taxonomy, file trees, decision breakdowns, skill trees. For hierarchical, ID-addressable block decomposition with per-block I/O, constraints, and implementation traceability, take the `diagram_types` semantic-pattern routing for Traceable block decomposition first — it specializes this layout without changing it.",
+      "bestFor": "org charts, dependency trees, taxonomy, file trees, decision breakdowns, skill trees. For hierarchical, ID-addressable block decomposition with per-block I/O, constraints, and implementation traceability, load the `diagram_types` semantic-pattern routing for Traceable block decomposition first — it specializes this layout without changing it.",
       "zh": {
         "title": "树",
         "aliases": [
@@ -2909,6 +4300,29 @@
         "Contrast: compute the ceiling against the token you actually ship. The 9px value line is muted, not ink, and muted needs a lighter cell than ink does: measured against the composited fill, the top of the ramp can go to 0.16 on light paper and 0.14 on dark before it drops under 4.5:1. (ink would tolerate 0.20 — which is exactly the number you will write down if you check the wrong token.) A mid-tone fill — solid accent, or 50% ink — fails against both light and dark text; use the tint-plus-stroke pattern instead. The source line takes muted too: soft measures 3.48:1 on paper and never reaches AA anywhere on this ramp.",
         "Legend: the house block (rule, LEGEND, keys), naming the focal cell, the direction of the ink ramp, and any cell carrying an info mark. Name that direction by contrast against the paper — stronger contrast is larger — never by lightness. darker is larger is true only on light paper; ship it in the dark variant and the legend states the opposite of what the reader sees, because the ramp's lightness inverts with the skin while its opacity does not. Named by contrast, one sentence serves all three variants and cannot rot apart. scripts/verify-skin-polarity.py gates this, checking every directional tone claim against the ramp composited on that file's own paper. HTML comments are not visible legend copy, including comments between text fragments; contradictory or unverifiable visible wording still fails. Explicit fill-opacity and opacity presentation attributes multiply the fill color's alpha before that comparison; CSS rules and inherited/group opacity are not resolved by this source checker. Ranked cells with zero effective opacity remain in the comparison at paper contrast. The source line rides the same row as LEGEND, right-aligned in mono 8px, stating what area encodes plus the dataset and its date. Archived closing tags inside an inline comment cannot truncate the surrounding visible claim."
       ],
+      "sections": [
+        {
+          "title": "Honest-data rule",
+          "items": [
+            "Area is the only encoding. Never clip, floor, or log-scale a cell to make it visible, and never drop a cell because it is small — a treemap claims to show a whole, so an omitted part makes the picture a lie. A part too small to label gets a legend entry and, only when the cell can contain it, an info mark; parts too small to draw get merged into one honest, named \"Other\". If several cells are invisible at the target size, the data wants a bar chart.",
+            "Watch the smallest cell hardest: it is the one that grid snapping and gutters distort most, and the one nobody checks. Beware, too, the rounding you display: six values each rounded up can sum past the total you printed underneath them. Either carry enough precision that the parts reconcile, or say plainly in the source line that they don't (PARTS ROUNDED, MAY NOT SUM)."
+          ]
+        },
+        {
+          "title": "Variants",
+          "items": [
+            "Marimekko: the same area encoding on a grid — column width is the category's share, segment height is the series' share within it, so area is the joint share. Full spec below.",
+            "Plot area: the treemap's — x 40 → 956, y 40 → 420 inside a 0 0 1000 500 viewBox, legend block at y=462/478/488. Column captions sit under the plot at y=438, sublabel role 9px, centred on their column. The shipped example spends 900px of column width across five columns with four 4px gutters.",
+            "Column width is category share of the whole, over the sum of column widths. Column edges snap to the 4px grid, so the gutters do; keep the gutter constant — a widened gap reads as a narrower column.",
+            "Every column is the full plot height, and its segments tile it top to bottom with no gaps and no gutters, separated by the hairline stroke alone. Segment height is the series' share within its column, so the same height means the same within-category share whatever the column's width. Segment boundaries are data and land on whole pixels, exempt from the 4px grid as the waterfall's bar tops are.",
+            "One series order, top to bottom, in every column — the order of the series' overall totals, largest at the top. A series absent from a category is omitted from that column, never drawn at zero height; the rows do not align across columns and are not meant to, which is why every segment prints its own share.",
+            "Column and series budgets: 3–8 columns, 2–5 series. Widths under ~24px cannot hold a label in either direction and take the treemap's information mark instead.",
+            "Labels sit inside the segment, top-left, 16px in, in the treemap's tiers by height: 56px and above takes the name in the node-name role 12px 600 with the amount and within-column share in the sublabel role 9px on the next line (2,140 min · 68%); 32–55px takes the same pair at 11px/9px on a tighter pitch; below that, the mark or nothing. The focal segment may add what its share is of (83% of mobile) because that is the one number a reader is most likely to misread as a share of the whole. Never shrink or widen a segment to fit a label.",
+            "Column captions print the column's name and its share of the whole (web · 31%), so the width can be read as a number without a ruler.",
+            "（此处有截断）"
+          ]
+        }
+      ],
       "antiPatterns": [
         {
           "head": "More than 8 cells without an \"Other\" bucket (unlabelable slivers).",
@@ -2955,6 +4369,26 @@
         "Each class is a single box (rx=6), divided by full-width hairlines into up to three compartments. Compartment heights follow content — never pad to a uniform height.",
         "Attribute/operation lines are a single combined string, not the two-column field/type layout ER uses — that visual distinction keeps the two types from reading the same.",
         "Coral (accent) is reserved for the class being implemented or extended (the focal type) — accent-tint fill, accent stroke. Its inbound inheritance/realization edges count as one additional accent element (treated as a group), for 2 accent elements total per diagram."
+      ],
+      "sections": [
+        {
+          "title": "Relationship vocabulary",
+          "items": [
+            "Relationship — Line",
+            "Inheritance (extends) — solid",
+            "Realization (implements) — dashed 5,4",
+            "Composition (owns, cascades) — solid",
+            "Aggregation (has, independent) — solid",
+            "Association — solid",
+            "Dependency (uses) — dashed 4,3"
+          ]
+        },
+        {
+          "title": "Connector rules",
+          "items": [
+            "All six SKILL.md §6 connector rules apply in full — orthogonal rounded elbows (r=8), no diagonals, bridge/hop for unavoidable crossings, fanned attach points ≥12px apart when several relationships share an edge, masked labels with the 6–10px gap, connectors drawn before boxes. Prefer laying classes out so relationships resolve to straight lines or single-elbow routes; a class diagram with every edge bridging is over budget — split by package instead."
+          ]
+        }
       ],
       "antiPatterns": [
         {
@@ -3150,6 +4584,20 @@
         "Gridlines / axes: identical to the bar chart — 4–6 faint horizontal gridlines ink @ 0.08 0.8px, y-axis line and x-axis baseline ink @ 0.25 1px, tick labels arrow-label role 8px muted right-aligned at x=72, rotated y-axis title eyebrow role 7px tracked.",
         "Category labels: centered under each bar at y=440, node-name role 11px 600 ink; the focal bar's label may take accent.",
         "Legend: horizontal bottom strip after a hairline rule, one key per treatment used: total, increase, decrease, focal."
+      ],
+      "sections": [
+        {
+          "title": "Waterfall honesty rules",
+          "items": [
+            "Decimal declarations conserve exactly. Fractional budgets use exact decimal arithmetic for totals, carries, and printed-value identity; geometry retains its pixel-rounding allowance. A binary floating point accumulation error must not reject a reconciled dollar-and-cent walk, and an actual decimal discrepancy is still a failure.",
+            "The running total must conserve. Start + every signed bridge = each subtotal and the end total, exactly — the declared data-values must reconcile before geometry is even considered. A waterfall that doesn't add up is not approximately right, it is wrong.",
+            "Bridges span exactly their two running levels. Each bar's drawn top and bottom must sit where the shared scale puts the running totals before and after it (±0.75px for integer rounding). Stretching one bridge \"for legibility\" moves money that doesn't exist.",
+            "Every carry sits at the level it transports, spanning its full gap, and declares that value. A carry drawn at the wrong height reconnects the walk to a different total.",
+            "Every bar prints its value, deltas with an explicit sign. An unsigned bridge asks the reader to infer direction from geometry alone; print +/−.",
+            "Zero bridges are dropped, never drawn. A zero-height bar is invisible ink that still occupies a column; state it in prose or the source line instead.",
+            "A degenerate start (zero or negative total) is a named failure, not a silently rescaled chart — the scale is derived from the start anchor."
+          ]
+        }
       ],
       "antiPatterns": [
         {

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="t d">
-  <title id="t">workbuddy-diagram-design</title>
+  <title id="t">diagram-design-mcp</title>
   <desc id="d">两个节点经折线汇入一个焦点节点的示意图形</desc>
   <rect width="64" height="64" rx="8" fill="#f5f5f5"/>
   <g fill="none" stroke="#2d3142" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

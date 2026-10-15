@@ -33,7 +33,7 @@ if (TOKEN.length === 0) {
 
 const text = (result) => (result.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n')
 
-const client = new Client({ name: 'wbdd-build-examples', version: '1.0.0' }, { capabilities: {} })
+const client = new Client({ name: 'ddm-build-examples', version: '1.0.0' }, { capabilities: {} })
 await client.connect(new StreamableHTTPClientTransport(new globalThis.URL(URL_), {
   requestInit: { headers: { Authorization: `Bearer ${TOKEN}` } },
 }))

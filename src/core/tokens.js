@@ -97,6 +97,17 @@ export const GEOMETRY = {
   grid: 4,
   /** Max border-radius anywhere. Beyond this is the "rounded-2xl" slop. */
   radiusMax: 10,
+  /**
+   * The discrete walkable values for structural geometry (node origins, widths,
+   * heights, gaps, padding). Ported from the reference `layout-budget.md`; the
+   * check list is not mechanical (the checker cannot tell a node from a zone),
+   * so it is the renderer's contract: pick from these, never an off-list 168px.
+   */
+  allowed: {
+    sizes: [80, 96, 112, 120, 128, 140, 144, 160, 180, 200, 240, 320],
+    gaps: [20, 24, 32, 40, 48],
+    padding: [8, 12, 16],
+  },
 }
 
 /**

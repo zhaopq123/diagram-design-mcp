@@ -114,3 +114,60 @@ test('导入：超预算时给出预算提示', () => {
   const result = parseImport(lines.join('\n'), 'auto', 'big.mmd')
   assert.ok(result.budgetFlags.some((flag) => flag.includes('超过通用上限')), '超预算竟然没提示')
 })
+
+// ── Markdown 围栏契约（上游 import-mermaid.md 的 ship rule）──────────────────
+// 旧实现用一条非贪婪正则抓第一个 ```mermaid——外层 4 反引号里的示例会被它当
+// 真图抓走，而且悄悄抓错，正是这条规则要防的失败。
+
+test('围栏：外层 4 反引号里的 mermaid 示例不算图，只取顶层块', () => {
+  const source = [
+    '# 文档',
+    '````',
+    '```mermaid',
+    'flowchart LR',
+    '  X[示例] --> Y[不该被选中]',
+    '```',
+    '````',
+    '```mermaid',
+    'flowchart LR',
+    '  A[真图] --> B[目标]',
+    '```',
+  ].join('\n')
+  const result = parseImport(source, 'auto', 'doc.md')
+  assert.equal(result.ok, true)
+  assert.deepEqual(result.nodes.map((node) => node.label), ['真图', '目标'])
+  assert.deepEqual(result.fenceBlocks, { total: 1, selected: 0 })
+})
+
+test('围栏：波浪线围栏同样认，且按同字符等长闭合', () => {
+  const source = ['~~~mermaid', 'flowchart LR', '  A[甲] --> B[乙]', '~~~'].join('\n')
+  const result = parseImport(source, 'auto', 'doc.md')
+  assert.equal(result.ok, true)
+  assert.deepEqual(result.nodes.map((node) => node.label), ['甲', '乙'])
+})
+
+test('围栏：多块默认取第 0 块，block 可选第 1 块，超范围报错', () => {
+  const source = [
+    '```mermaid', 'flowchart LR', '  A[一] --> B[二]', '```',
+    '中间的文字',
+    '```mmd', 'flowchart LR', '  C[三] --> D[四]', '```',
+  ].join('\n')
+  const first = parseImport(source, 'auto', 'doc.md')
+  assert.deepEqual(first.nodes.map((node) => node.label), ['一', '二'])
+  assert.deepEqual(first.fenceBlocks, { total: 2, selected: 0 })
+  const second = parseImport(source, 'auto', 'doc.md', 1)
+  assert.deepEqual(second.nodes.map((node) => node.label), ['三', '四'])
+  const beyond = parseImport(source, 'auto', 'doc.md', 5)
+  assert.equal(beyond.ok, false)
+  assert.match(beyond.error, /超出范围/)
+})
+
+test('围栏：.md 里没有 mermaid 围栏时明确失败，而不是把正文当图', () => {
+  const result = parseImport('# 一张普通说明\n\n这里没有图。', 'auto', 'readme.md')
+  assert.equal(result.ok, false)
+  assert.match(result.error, /没有顶层/)
+  // 显式 format=mermaid 表示"整段就是裸源码"，不找围栏——错误信息里给的逃生门。
+  const raw = parseImport('flowchart LR\n  A[甲] --> B[乙]', 'mermaid', 'readme.md')
+  assert.equal(raw.ok, true)
+  assert.deepEqual(raw.nodes.map((node) => node.label), ['甲', '乙'])
+})

@@ -81,9 +81,9 @@ async function main() {
   const transport = new StreamableHTTPClientTransport(new globalThis.URL(URL_), {
     requestInit: { headers: { Authorization: `Bearer ${TOKEN}` } },
   })
-  const client = new Client({ name: 'wbdd-smoke', version: '1.0.0' }, { capabilities: {} })
+  const client = new Client({ name: 'ddm-smoke', version: '1.0.0' }, { capabilities: {} })
   await client.connect(transport)
-  ok('initialize 成功', client.getServerVersion()?.name === 'workbuddy-diagram-design', JSON.stringify(client.getServerVersion()))
+  ok('initialize 成功', client.getServerVersion()?.name === 'diagram-design-mcp', JSON.stringify(client.getServerVersion()))
 
   section('工具清单契约（严格模型要求）')
   const { tools } = await client.listTools()
@@ -191,7 +191,7 @@ async function main() {
   section('并发会话')
   const clients = await Promise.all(Array.from({ length: 4 }, async () => {
     const t = new StreamableHTTPClientTransport(new globalThis.URL(URL_), { requestInit: { headers: { Authorization: `Bearer ${TOKEN}` } } })
-    const c = new Client({ name: 'wbdd-parallel', version: '1.0.0' }, { capabilities: {} })
+    const c = new Client({ name: 'ddm-parallel', version: '1.0.0' }, { capabilities: {} })
     await c.connect(t)
     const r = await c.callTool({ name: 'diagram_sizes', arguments: {} })
     await c.close()

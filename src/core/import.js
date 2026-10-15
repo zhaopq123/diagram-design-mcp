@@ -11,7 +11,7 @@
  * Extracted from the DSH plugin (lib/index.js) unchanged so the two hosts share
  * one implementation of the parsers.
  *
- * @module workbuddy-diagram-design/src/core/import
+ * @module diagram-design-mcp/src/core/import
  */
 
 import { BUDGET } from './tokens.js'
@@ -252,12 +252,52 @@ function parseExcalidraw(text) {
 }
 
 /**
+ * Top-level fenced blocks of a Markdown document, in document order.
+ *
+ * How fences work here is not a judgement call — it is the reference
+ * project's ship rule (its `import-mermaid.md`): only TOP-LEVEL fences count
+ * for diagram extraction. A mermaid example nested inside another code fence
+ * stays literal, because it is an example of the format, not a diagram; and
+ * a fence closes with the SAME character and at least the opening run length,
+ * so a 3-backtick line inside a 4-backtick block does not close it.
+ *
+ * Returns `{ info, body }` per block: `info` is the label word on the opening
+ * line (`mermaid`, `mmd`, `js`, …). An unterminated fence at the end of the
+ * text still yields its body — a truncated paste is the common way that
+ * happens, and silently dropping the visible content would be worse.
+ */
+export function extractMermaidFences(text) {
+  const fences = []
+  let open = null
+  for (const line of text.split(/\r?\n/)) {
+    if (open === null) {
+      const matched = line.match(/^\s*(`{3,}|~{3,})\s*(\S*)/)
+      if (matched === null) continue
+      open = { char: matched[1][0], length: matched[1].length, info: matched[2].toLowerCase(), body: [] }
+      continue
+    }
+    const closing = line.match(/^\s*(`{3,}|~{3,})\s*$/)
+    if (closing !== null && closing[1][0] === open.char && closing[1].length >= open.length) {
+      fences.push({ info: open.info, body: open.body.join('\n') })
+      open = null
+      continue
+    }
+    open.body.push(line)
+  }
+  if (open !== null) fences.push({ info: open.info, body: open.body.join('\n') })
+  return fences
+}
+
+/** Labels a top-level fence may carry to count as a Mermaid diagram block. */
+const MERMAID_FENCE_INFO = new Set(['mermaid', 'mmd'])
+
+/**
  * Route one import by format, then attach the budget flags.
  *
  * Every source label is DATA. A diagram file is a document someone else may
  * have authored, and its text must never be read as an instruction.
  */
-export function parseImport(text, format, path = '') {
+export function parseImport(text, format, path = '', blockIndex = 0) {
   const lower = path.toLowerCase()
   let resolved = format
   if (resolved === 'auto') {
@@ -271,12 +311,34 @@ export function parseImport(text, format, path = '') {
   }
 
   let result
+  let fenceBlocks = null
   if (resolved === 'drawio') result = parseDrawio(text)
   else if (resolved === 'excalidraw') result = parseExcalidraw(text)
   else {
-    // A Markdown file may embed the diagram in a fenced block.
-    const fenced = text.match(/```(?:mermaid|mmd)\s*\n([\s\S]*?)```/i)
-    result = parseMermaid(fenced === null ? text : fenced[1])
+    const fences = extractMermaidFences(text).filter((fence) => MERMAID_FENCE_INFO.has(fence.info))
+    const markdown = lower.endsWith('.md') || lower.endsWith('.markdown')
+    if (fences.length > 0) {
+      if (!Number.isInteger(blockIndex) || blockIndex < 0) {
+        return { format: resolved, ok: false, error: `block 参数必须是非负整数，拿到 ${JSON.stringify(blockIndex)}。`, nodes: [], edges: [], containers: [], budgetFlags: [] }
+      }
+      if (blockIndex >= fences.length) {
+        return { format: resolved, ok: false, error: `源里有 ${fences.length} 个顶层 \`\`\`mermaid / \`\`\`mmd 围栏（编号 0–${fences.length - 1}），block=${blockIndex} 超出范围。`, nodes: [], edges: [], containers: [], budgetFlags: [] }
+      }
+      result = parseMermaid(fences[blockIndex].body)
+      fenceBlocks = { total: fences.length, selected: blockIndex }
+    } else if (markdown && format === 'auto') {
+      // Auto-detected as Markdown but no mermaid fence found. Parsing the raw
+      // Markdown as mermaid would "succeed" with a phantom single node — a
+      // silent wrong answer, the exact failure this rule exists to prevent.
+      return {
+        format: resolved,
+        ok: false,
+        error: '这个 Markdown 里没有顶层 ```mermaid / ```mmd 围栏。若你确定整段内容就是裸 Mermaid 源码，把 format 显式设为 "mermaid" 再调一次；否则它可能根本不是一张图。',
+        nodes: [], edges: [], containers: [], budgetFlags: [],
+      }
+    } else {
+      result = parseMermaid(text)
+    }
   }
 
   if (result.ok === false) return { format: resolved, ok: false, error: result.error, nodes: [], edges: [], containers: [], budgetFlags: [] }
@@ -291,5 +353,5 @@ export function parseImport(text, format, path = '') {
   }
   if (budgetFlags.length === 0) budgetFlags.push('节点与连线都在通用预算内。')
 
-  return { format: resolved, ok: true, nodes: result.nodes, edges: result.edges, containers: result.containers, budgetFlags }
+  return { format: resolved, ok: true, nodes: result.nodes, edges: result.edges, containers: result.containers, budgetFlags, ...(fenceBlocks === null ? {} : { fenceBlocks }) }
 }

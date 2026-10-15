@@ -7,7 +7,7 @@ cathrynlavery/diagram-design   (MIT, 上游设计系统)
         ↓  移植为 DSH 插件
 dsh-diagram-design             (MIT, 加了 check/scaffold/面板)
         ↓  迁移为 MCP 服务
-workbuddy-diagram-design       (MIT, 本包)
+diagram-design-mcp             (MIT, 本包)
 ```
 
 ## 上游：`cathrynlavery/diagram-design`
@@ -34,15 +34,15 @@ workbuddy-diagram-design       (MIT, 本包)
 - `lib/scaffold.js` —— 生成"落地即合规"的骨架文档。
 - `lib/index.js` / `lib/client.js` —— DSH Host 半边（工具注册）与 Web 侧边栏图库面板。
 
-## 本包：`workbuddy-diagram-design`
+## 本包：`diagram-design-mcp`
 
-把插件的能力迁移成 **WorkBuddy 专用的 MCP 服务**，并做以下改动：
+把插件的能力迁移成**远端 MCP 服务**（工具对任何支持 MCP 的客户端开放，不绑定单一宿主；本包以 WorkBuddy 为参考宿主），并做以下改动：
 
 - **传输层换成 MCP Streamable HTTP**，工具对任何 MCP 客户端可用，不再绑定单一宿主。
 - **工具 schema 重写为扁平结构**：去掉 `outputSchema`、`anyOf`、`oneOf`、`allOf`、`$ref`。严格上游模型会因为这些字段直接拒掉整个请求，工具静默不可用。`test/tools.test.mjs` 把这个约束锁死了。
 - **内容进、内容出**：服务端不读写调用方文件系统，路径穿越风险归零，服务可以跑在完全不同的机器上（本包实际部署在手机上）。
 - **文档指针改成工具数据**：上游 `references/*.md` 靠宿主 `Read` 加载，远程 MCP 客户端读不到，因此规范、尺寸、类型目录、图标库分别由 `diagram_tokens` / `diagram_sizes` / `diagram_types` / `diagram_icons` 直接发内容；`catalog.json` 只保留 `upstreamDoc` 作溯源，不分发那些 `.md`。
-- **新增 `diagram_gallery`**：DSH 版侧边栏图库面板在 WorkBuddy 下的等价物——自足 HTML 页，`iframe sandbox="" srcdoc` 隔离预览。
+- **新增 `diagram_gallery`**：DSH 版侧边栏图库面板在 MCP 形态下的等价物——自足 HTML 页，`iframe sandbox="" srcdoc` 隔离预览。
 - **修复上游解析器 bug**：Mermaid `S-->>C` 被解析出幽灵节点 `S-`（id 正则尾部允许 `-`，吞掉了箭头首划）。
 - **解析器从 Host 半边抽出**为 `src/core/import.js`，脱离宿主可独立测试。
 

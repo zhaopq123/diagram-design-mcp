@@ -1,16 +1,16 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ============================================================
-# diagram-mcp-ctl —— WorkBuddy 图表设计 MCP 运维入口
+# diagram-mcp-ctl —— 图表设计 MCP 服务运维入口
 #
 #   diagram-mcp-ctl status    端口 + 会话 + 健康检查 + 配置漂移 + 最近日志
 #   diagram-mcp-ctl restart   重启服务
 #   diagram-mcp-ctl stop      停服务（含守护循环）
 #   diagram-mcp-ctl logs      跟踪日志
-#   diagram-mcp-ctl token     打印访问 token（给 WorkBuddy 配置用）
+#   diagram-mcp-ctl token     打印访问 token（给 MCP 客户端配置用）
 # ============================================================
 export PATH=/data/data/com.termux/files/usr/bin:$PATH
 export HOME=/data/data/com.termux/files/home
-APP="$HOME/workbuddy-diagram-design"
+APP="$HOME/diagram-design-mcp"
 LOGFILE="$HOME/logs/diagram-mcp.log"
 SESSION=svc-diagram
 PORT=8400
@@ -19,9 +19,9 @@ port_up() { netstat -tln 2>/dev/null | grep -q ":$1 "; }
 
 # 注意 serve[r] 的方括号：pkill -f 会匹配整条命令行，写成 server.mjs 时
 # 连"执行这条命令的 shell"自己都会被匹配上，直接把自己杀掉（ssh 掉线 255）。
-kill_app() { pkill -f "diagram-design/src/serve[r]\.mjs" 2>/dev/null; }
+kill_app() { pkill -f "$APP/src/serve[r]\.mjs" 2>/dev/null; }
 
-app_pid() { pgrep -f "diagram-design/src/serve[r]\.mjs" 2>/dev/null | head -1; }
+app_pid() { pgrep -f "$APP/src/serve[r]\.mjs" 2>/dev/null | head -1; }
 
 # 值里含 TOKEN 的只打印长度，别把密钥写进日志/截图。
 mask() {

@@ -11,7 +11,7 @@
  * The server is deliberately stateless about *content*: it holds no user files.
  * See `src/tools.js` for why.
  *
- * @module workbuddy-diagram-design/src/server
+ * @module diagram-design-mcp/src/server
  */
 
 import { createServer } from 'node:http'
@@ -64,7 +64,11 @@ function buildServer() {
     },
     {
       capabilities: { tools: {} },
-      instructions: '用 diagram_types 选型，diagram_scaffold 起手，diagram_check 收尾。所有工具都是内容进、内容出，不读写调用方的文件系统。',
+      instructions: [
+        '编辑级图表工具（45 类）。所有工具都是内容进、内容出：服务不读写调用方的文件系统，HTML 由你落盘。',
+        '流程：① `diagram_types` 选型（支持中文关键词）→ ② `diagram_sizes` 定四个旋钮（格式/尺寸/细节/受众；装不下拆图，不要缩字号）→ ③ `diagram_tokens` 取权威数值 → ④ 动手前用一条短消息把计划说给用户（类型＋尺寸预设＋会砍掉什么，用户能回话就让他先改）→ ⑤ `diagram_scaffold` 搭骨架（返回的第二个内容块原样落盘）→ ⑥ 填内容 → ⑦ `diagram_check` 复检到 error 清零 → ⑧ 向用户交底：画了什么、砍了什么、为什么。',
+        '有 Mermaid / draw.io / Excalidraw 源文件先 `diagram_import` 提结构——然后重画，不是转换。改既有图从第 ③ 步开始。',
+      ].join('\n'),
     },
   )
 

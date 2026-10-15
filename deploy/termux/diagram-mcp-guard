@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ============================================================
-# diagram-mcp-guard —— WorkBuddy 图表设计 MCP（:8400）守护脚本
+# diagram-mcp-guard —— 图表设计 MCP 服务（:8400）守护脚本
 #
 # 运行位置：Termux 层（原生 node v24），**不进 proot**。
 #   理由：这个服务是纯 Node + 一个依赖，Termux 自带 node 足够；
@@ -13,7 +13,7 @@
 # ============================================================
 export PATH=/data/data/com.termux/files/usr/bin:$PATH
 export HOME=/data/data/com.termux/files/home
-APP="$HOME/workbuddy-diagram-design"
+APP="$HOME/diagram-design-mcp"
 LOGDIR="$HOME/logs"
 LOGFILE="$LOGDIR/diagram-mcp.log"
 SESSION=svc-diagram

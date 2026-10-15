@@ -46,7 +46,7 @@ const section = (title) => console.log(`\n── ${title} ──`)
 const health = () => fetch(`${BASE}/health`).then((r) => r.json())
 const textOf = (r) => (r.content ?? []).filter((c) => c.type === 'text').map((c) => c.text).join('\n')
 
-async function connect(name = 'wbdd-audit') {
+async function connect(name = 'ddm-audit') {
   const transport = new StreamableHTTPClientTransport(new globalThis.URL(URL_), { requestInit: { headers: AUTH } })
   const client = new Client({ name, version: '1.0.0' }, { capabilities: {} })
   await client.connect(transport)

@@ -80,6 +80,26 @@ test('工具契约：可选参数不得用联合类型表达', () => {
   }
 })
 
+// ── L0 导航：agent 只看得见「工具描述 + 返回文本」，每个工具的返回都要说清下一步去哪 ──
+
+test('导航：8 个工具的默认返回都带下一步指引（L0 唯一的信息面）', async () => {
+  const good = (await byName.get('diagram_scaffold').handler({ title: '导航用例' }))[1].text
+  const calls = {
+    diagram_tokens: {},
+    diagram_sizes: {},
+    diagram_icons: {},
+    diagram_types: {},
+    diagram_scaffold: { title: '导航用例' },
+    diagram_check: { html: good },
+    diagram_import: { source: 'flowchart TD\n  A[下单] --> B[发货]', path: 'nav.mmd' },
+    diagram_gallery: { entries: [{ name: 'a.html', html: good }] },
+  }
+  for (const [name, args] of Object.entries(calls)) {
+    const [first] = await byName.get(name).handler(args)
+    assert.match(first.text, /下一步|接下来|再调一次/, `${name} 的返回没有下一步指引——L0 agent 的管线会在这里断掉`)
+  }
+})
+
 test('diagram_tokens：返回设计系统全文', async () => {
   const [block] = await byName.get('diagram_tokens').handler({})
   assert.equal(block.type, 'text')
